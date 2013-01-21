@@ -109,10 +109,6 @@
 {
     int u,v,i,j;
     double result;
-    //double x = 1;
-    //double y = 1;
-    
-    //double height = 8;
     for(u = 0; u < 8; u++) // 
     {
         for(v = 0; v < 8; v++)
@@ -122,21 +118,10 @@
             {
                 for(j = 0; j < 8; j++)
                 {
-                    //x = [self alpha:(double)i];
-                    //y = [self alpha:(double)j];
-                    
-                    //result = result + (x*y*
-                    /*
-                    result = result + (alphalookup[i][j]*
-                                       cos(((M_PI*u)/(2*height))*(2*i + 1))*
-                                       cos(((M_PI*v)/(2*height))*(2*j + 1))*
-                                       input[i][j]);
-                    */
-                    
                     result = result + (cosalphalookup[u][v][i][j] * input[i][j]);
                 }
             }
-            output[u+v*8] = result / 4.0; //store the results
+            output[u+v*8] = result; //store the results
         }
     }
 }
