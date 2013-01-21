@@ -12,11 +12,11 @@
 
 @interface ViewController : UIViewController <UINavigationControllerDelegate, UIImagePickerControllerDelegate, AVAudioPlayerDelegate>
 {
-    IBOutlet UIImageView *grabbedImage;
-    IBOutlet UIButton *grabButton;
-    IBOutlet UIView *resultView;
+    UIImageView *grabbedImage;
+    UIButton *_grabButton;
+    UIView *_resultView;
     
-    UIImage *theImage;
+    UIImage *_theImage;
     UIImagePickerController *imgPicker;
     
     double **dctInput;
@@ -31,6 +31,7 @@
 - (IBAction)grabImage;
 
 @property (nonatomic, retain) UIImagePickerController *imgPicker;
+@property (nonatomic, retain) UIImage *theImage;
 
 - (void)writeWavHeader:(unsigned char *)header withNumSamples:(long)numSamples;
 

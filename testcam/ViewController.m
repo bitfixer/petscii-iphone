@@ -11,8 +11,30 @@
 #import <AVFoundation/AVFoundation.h>
 
 @implementation ViewController
+{
+    AVCaptureVideoPreviewLayer *_previewLayer;
+    AVCaptureSession *_captureSession;
+    AVCaptureStillImageOutput *_stillImageOutput;
+}
 
 @synthesize imgPicker;
+@synthesize theImage = _theImage;
+
+- (id) init
+{
+    self = [super init];
+    if (self)
+    {
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_captureSession release]; _captureSession = nil;
+    [_previewLayer release]; _previewLayer = nil;
+    [super dealloc];
+}
 
 - (void)didReceiveMemoryWarning
 {
@@ -32,13 +54,13 @@
 {
     [self.imgPicker takePicture];
     //[self.imgPicker 
-    //[self dismissModalViewControllerAnimated:YES];
+    [self dismissModalViewControllerAnimated:YES];
 }
      
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
 {
     //grabbedImage.image = image;
-    theImage = [image retain];
+    self.theImage = [image retain];
     //[[picker parentViewController] dismissModalViewControllerAnimated:YES];
     [self dismissModalViewControllerAnimated:YES];
     
@@ -192,8 +214,8 @@
     //theImage = grabbedImage.image;
     
     // check size
-    double width = theImage.size.width;
-    double height = theImage.size.height;
+    double width = self.theImage.size.width;
+    double height = self.theImage.size.height;
     
     double destWidth = 320;
     double ratio = width / destWidth;
@@ -208,7 +230,7 @@
     UIImageView *imView;
     imView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, height/ratio)];
     // add image to view
-    imView.image = theImage;
+    imView.image = self.theImage;
     
     [smallView addSubview:imView];
     
@@ -220,14 +242,14 @@
     UIGraphicsEndImageContext();
     
     grabbedImage.image = newImg;
-    theImage = newImg;
+    self.theImage = newImg;
     
     int iWidth;
-    iWidth = theImage.size.width;
-    height = theImage.size.height;
+    iWidth = self.theImage.size.width;
+    height = self.theImage.size.height;
     
     NSLog(@"image new size: %d %f",iWidth, height);
-    CFDataRef pixelData = CGDataProviderCopyData(CGImageGetDataProvider(theImage.CGImage));
+    CFDataRef pixelData = CGDataProviderCopyData(CGImageGetDataProvider(self.theImage.CGImage));
     const UInt8* data = CFDataGetBytePtr(pixelData);
     
     
@@ -259,8 +281,6 @@
     double copytime = 0;
     double dcttime = 0;
     double matchtime = 0;
-    double minDc = 0, maxDc = 0;
-    double thisdc;
     // step through blocks
     for (y = 0; y < 200; y+= 8)
     {
@@ -287,17 +307,6 @@
             
             s = CACurrentMediaTime();
             matching = [self getMatchingGlyph:dctOutput];
-            /*
-            thisdc = dctOutput[0]-dctSignatures[matching][0];
-            if (thisdc < minDc)
-            {
-                minDc = thisdc;
-            }
-            if (thisdc > maxDc)
-            {
-                maxDc = thisdc;
-            }
-            */
             e = CACurrentMediaTime();
             matchtime += e-s;
             
@@ -313,7 +322,7 @@
             thisImg = [UIImage imageNamed:imgFname];
             frag.image = thisImg;
             
-            [resultView addSubview:frag];
+            [_resultView addSubview:frag];
             
             // add image index
             imgIndices[currImgIndex] = matching;
@@ -326,6 +335,7 @@
     NSLog(@"done!");
     
     // now create wav file
+    
     double startTime = CACurrentMediaTime();
     [self outputToWav:imgIndices withLength:1000];
     double endTime = CACurrentMediaTime();
@@ -749,6 +759,117 @@
     //self.imgPicker.showsCameraControls = NO;
     
     [self prepareGlyphSignatures];
+    
+    _captureSession = [[AVCaptureSession alloc] init];
+    [self addVideoInput];
+    [self addVideoPreviewLayer];
+    [self addStillImageOutput];
+    
+    CGRect layerRect = [[[self view] layer] bounds];
+    [_previewLayer setBounds:layerRect];
+    [_previewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
+                                          CGRectGetMidY(layerRect))];
+    [[[self view] layer] addSublayer:_previewLayer];
+    [_captureSession startRunning];
+    
+    _grabButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    _grabButton.frame = CGRectMake(0, 400, 320, 80);
+    [_grabButton addTarget:self action:@selector(captureStillImage) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:_grabButton];
+    
+    _resultView = [[UIView alloc] init];
+    _resultView.frame = CGRectMake(0, 200, 320, 200);
+    _resultView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_resultView];
+}
+
+- (void)addVideoInput {
+	AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+	if (videoDevice) {
+		NSError *error;
+		AVCaptureDeviceInput *videoIn = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+		if (!error) {
+			if ([_captureSession canAddInput:videoIn])
+				[_captureSession addInput:videoIn];
+			else
+				NSLog(@"Couldn't add video input");
+		}
+		else
+			NSLog(@"Couldn't create video input");
+	}
+	else
+		NSLog(@"Couldn't create video capture device");
+}
+
+- (void)addVideoPreviewLayer {
+	_previewLayer = [[[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession] autorelease];
+	[_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
+    
+}
+
+- (void)addStillImageOutput
+{
+    _stillImageOutput = [[[AVCaptureStillImageOutput alloc] init] autorelease];
+    NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys:AVVideoCodecJPEG,AVVideoCodecKey,nil];
+    [_stillImageOutput setOutputSettings:outputSettings];
+    
+    AVCaptureConnection *videoConnection = nil;
+    for (AVCaptureConnection *connection in [_stillImageOutput connections]) {
+        for (AVCaptureInputPort *port in [connection inputPorts]) {
+            if ([[port mediaType] isEqual:AVMediaTypeVideo] ) {
+                videoConnection = connection;
+                break;
+            }
+        }
+        if (videoConnection) {
+            break;
+        }
+    }
+    
+    [_captureSession addOutput:_stillImageOutput];
+}
+
+
+- (void)captureStillImage
+{
+	AVCaptureConnection *videoConnection = nil;
+	for (AVCaptureConnection *connection in [_stillImageOutput connections]) {
+		for (AVCaptureInputPort *port in [connection inputPorts]) {
+			if ([[port mediaType] isEqual:AVMediaTypeVideo]) {
+				videoConnection = connection;
+				break;
+			}
+		}
+		if (videoConnection) {
+            break;
+        }
+	}
+    
+	NSLog(@"about to request a capture from: %@", _stillImageOutput);
+	[_stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection
+                                                   completionHandler:^(CMSampleBufferRef imageSampleBuffer, NSError *error)
+    {
+        /*
+        CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
+        if (exifAttachments)
+        {
+            NSLog(@"attachements: %@", exifAttachments);
+        }
+        else
+        {
+            NSLog(@"no attachments");
+        }
+        */
+        
+        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
+        UIImage *image = [[UIImage alloc] initWithData:imageData];
+        //[self setStillImage:image];
+        //[image release];
+        self.theImage = image;
+        [image release];
+        [self processImage];
+        //[[NSNotificationCenter defaultCenter] postNotificationName:kImageCapturedSuccessfully object:nil];
+    }];
 }
 
 - (void)viewDidUnload

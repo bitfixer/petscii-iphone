@@ -14,7 +14,6 @@
 		6585C18D1548A61B001910E0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6585C18C1548A61B001910E0 /* main.m */; };
 		6585C1911548A61B001910E0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6585C1901548A61B001910E0 /* AppDelegate.m */; };
 		6585C1941548A61B001910E0 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6585C1931548A61B001910E0 /* ViewController.m */; };
-		6585C1971548A61B001910E0 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6585C1951548A61B001910E0 /* ViewController.xib */; };
 		65BDEE861549DFA9000C8B18 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65BDEE851549DFA9000C8B18 /* AVFoundation.framework */; };
 		65BDEE891549E04D000C8B18 /* sine.wav in Resources */ = {isa = PBXBuildFile; fileRef = 65BDEE881549E04D000C8B18 /* sine.wav */; };
 		65BDEE8B1549E107000C8B18 /* testsin.wav in Resources */ = {isa = PBXBuildFile; fileRef = 65BDEE8A1549E107000C8B18 /* testsin.wav */; };
@@ -803,7 +802,6 @@
 		6585C1901548A61B001910E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		6585C1921548A61B001910E0 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		6585C1931548A61B001910E0 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		6585C1961548A61B001910E0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
 		65BDEE851549DFA9000C8B18 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		65BDEE881549E04D000C8B18 /* sine.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = sine.wav; path = Resources/sine.wav; sourceTree = "<group>"; };
 		65BDEE8A1549E107000C8B18 /* testsin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = testsin.wav; path = Resources/testsin.wav; sourceTree = "<group>"; };
@@ -1632,7 +1630,6 @@
 				6585C1901548A61B001910E0 /* AppDelegate.m */,
 				6585C1921548A61B001910E0 /* ViewController.h */,
 				6585C1931548A61B001910E0 /* ViewController.m */,
-				6585C1951548A61B001910E0 /* ViewController.xib */,
 				6585C1871548A61B001910E0 /* Supporting Files */,
 			);
 			path = testcam;
@@ -2478,7 +2475,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6585C18B1548A61B001910E0 /* InfoPlist.strings in Resources */,
-				6585C1971548A61B001910E0 /* ViewController.xib in Resources */,
 				65D4BC491549157C0070ED55 /* 0_r.png in Resources */,
 				65D4BC4A1549157C0070ED55 /* 0.png in Resources */,
 				65D4BC4B1549157C0070ED55 /* 0.txt in Resources */,
@@ -3275,14 +3271,6 @@
 				6585C18A1548A61B001910E0 /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		6585C1951548A61B001910E0 /* ViewController.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				6585C1961548A61B001910E0 /* en */,
-			);
-			name = ViewController.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
