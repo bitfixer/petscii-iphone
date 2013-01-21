@@ -142,9 +142,7 @@
 {
     
     double dcDiff = inputA[0]-inputB[0];
-    //NSLog(@"dc diff %f",dcDiff);
-    
-    if (dcDiff > 4000 || dcDiff < -4000)
+    if (dcDiff > 3000 || dcDiff < -3000)
     {
         return DBL_MAX;
     }
@@ -180,6 +178,9 @@
     }
     
     //NSLog(@"match %d",matchIndex);
+    
+    //double dcDiff = dctSearch[0] - dctSignatures[matchIndex][0];
+    //NSLog(@"match dc diff %f",dcDiff);
     
     return matchIndex;
 }
@@ -258,6 +259,8 @@
     double copytime = 0;
     double dcttime = 0;
     double matchtime = 0;
+    double minDc = 0, maxDc = 0;
+    double thisdc;
     // step through blocks
     for (y = 0; y < 200; y+= 8)
     {
@@ -284,6 +287,17 @@
             
             s = CACurrentMediaTime();
             matching = [self getMatchingGlyph:dctOutput];
+            /*
+            thisdc = dctOutput[0]-dctSignatures[matching][0];
+            if (thisdc < minDc)
+            {
+                minDc = thisdc;
+            }
+            if (thisdc > maxDc)
+            {
+                maxDc = thisdc;
+            }
+            */
             e = CACurrentMediaTime();
             matchtime += e-s;
             
@@ -321,6 +335,7 @@
     NSLog(@"took %f seconds to calc dct",dcttime);
     NSLog(@"took %f seconds to match",matchtime);
     NSLog(@"took %f seconds to build wav",endTime-startTime);
+    //NSLog(@"mindc %f maxdc %f",minDc,maxDc);
     
     // play the wav file
     NSString *fullWavPath;
