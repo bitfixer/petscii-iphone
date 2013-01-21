@@ -232,6 +232,8 @@
     const UInt8* data = CFDataGetBytePtr(pixelData);
     
     
+    double startImConvert = CACurrentMediaTime();
+    
     int x,y,xx,yy;
     int matching;
     UIImageView *frag;
@@ -242,46 +244,50 @@
         for (x = 0; x < 320; x++)
         {
             imagedat[x][y] = [self pixelBrightness:data:iWidth:x:y];
-            //NSLog(@"%d %d %f",x,y,imagedat[x][y]);
         }
     }
     
+    double endImConvert = CACurrentMediaTime();
+    
     NSLog(@"done conversion.");
+    
+    double startDct = CACurrentMediaTime();
     
     unsigned char *imgIndices;
     imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1000);
     int currImgIndex = 0;
     
+    double copytime = 0;
+    double dcttime = 0;
+    double matchtime = 0;
     // step through blocks
     for (y = 0; y < 200; y+= 8)
     {
         for (x = 0; x < 320; x+= 8)
         {
+            double s = CACurrentMediaTime();
             // copy values into input buffer
             for (yy = 0; yy < 8; yy ++)
             {
                 for (xx = 0; xx < 8; xx++)
                 {
                     dctInput[xx][yy] = imagedat[x+xx][y+yy];
-                    //NSLog(@"%d %d %f !!",xx,yy,dctInput[xx][yy]);
                 }
             }
+            double e = CACurrentMediaTime();
+            copytime += e-s;
             
+            s = CACurrentMediaTime();
             [self dctWithInput:dctInput andOutput:dctOutput];
+            e = CACurrentMediaTime();
+            dcttime += e-s;
             
             frag = [[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)];
             
-            
-            
-            
-            /*
-            for (int i = 0; i < 64; i++)
-            {
-                NSLog(@"%d %f",i,dctOutput[i]);
-            }
-            */
+            s = CACurrentMediaTime();
             matching = [self getMatchingGlyph:dctOutput];
-            //NSLog(@"%d %d match %d",x,y,matching);
+            e = CACurrentMediaTime();
+            matchtime += e-s;
             
             
             if (matching < 128)
@@ -300,19 +306,23 @@
             // add image index
             imgIndices[currImgIndex] = matching;
             currImgIndex++;
-            
-            // create image view and add to result view
-            
-            
-            
-            
         }
     }
+    
+    double endDct = CACurrentMediaTime();
     
     NSLog(@"done!");
     
     // now create wav file
+    double startTime = CACurrentMediaTime();
     [self outputToWav:imgIndices withLength:1000];
+    double endTime = CACurrentMediaTime();
+    NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
+    NSLog(@"took %f seconds to do total dct",endDct-startDct);
+    NSLog(@"took %f seconds to copy data",copytime);
+    NSLog(@"took %f seconds to calc dct",dcttime);
+    NSLog(@"took %f seconds to match",matchtime);
+    NSLog(@"took %f seconds to build wav",endTime-startTime);
     
     // play the wav file
     NSString *fullWavPath;
@@ -751,7 +761,6 @@
     
     
     return NO;
-    //return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
 @end
