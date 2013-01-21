@@ -787,6 +787,7 @@
 		65D4BF471549157C0070ED55 /* 255.png in Resources */ = {isa = PBXBuildFile; fileRef = 65D4BC461549157C0070ED55 /* 255.png */; };
 		65D4BF481549157C0070ED55 /* 255.txt in Resources */ = {isa = PBXBuildFile; fileRef = 65D4BC471549157C0070ED55 /* 255.txt */; };
 		65D4BF491549157C0070ED55 /* char.png in Resources */ = {isa = PBXBuildFile; fileRef = 65D4BC481549157C0070ED55 /* char.png */; };
+		65FA514716AC7D470042E1D1 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65FA514616AC7D470042E1D1 /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -1575,6 +1576,7 @@
 		65D4BC461549157C0070ED55 /* 255.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = 255.png; path = Resources/255.png; sourceTree = "<group>"; };
 		65D4BC471549157C0070ED55 /* 255.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = 255.txt; path = Resources/255.txt; sourceTree = "<group>"; };
 		65D4BC481549157C0070ED55 /* char.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = char.png; path = Resources/char.png; sourceTree = "<group>"; };
+		65FA514616AC7D470042E1D1 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1582,6 +1584,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65FA514716AC7D470042E1D1 /* QuartzCore.framework in Frameworks */,
 				65BDEE861549DFA9000C8B18 /* AVFoundation.framework in Frameworks */,
 				6585C1811548A61B001910E0 /* UIKit.framework in Frameworks */,
 				6585C1831548A61B001910E0 /* Foundation.framework in Frameworks */,
@@ -1595,6 +1598,7 @@
 		6585C1711548A61A001910E0 = {
 			isa = PBXGroup;
 			children = (
+				65FA514616AC7D470042E1D1 /* QuartzCore.framework */,
 				65BDEE851549DFA9000C8B18 /* AVFoundation.framework */,
 				6585C1861548A61B001910E0 /* testcam */,
 				6585C17F1548A61B001910E0 /* Frameworks */,
