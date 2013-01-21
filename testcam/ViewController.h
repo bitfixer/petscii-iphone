@@ -12,7 +12,7 @@
 
 @interface ViewController : UIViewController <UINavigationControllerDelegate, UIImagePickerControllerDelegate, AVAudioPlayerDelegate>
 {
-    UIImageView *grabbedImage;
+    UIImageView *_grabbedImage;
     UIButton *_grabButton;
     UIView *_resultView;
     

@@ -210,9 +210,6 @@
 
 - (void)processImage
 {
-    //UIImage *capturedImage;
-    //theImage = grabbedImage.image;
-    
     // check size
     double width = self.theImage.size.width;
     double height = self.theImage.size.height;
@@ -220,9 +217,9 @@
     double destWidth = 320;
     double ratio = width / destWidth;
     
-    
     NSLog(@"image size: %f %f",width, height);
     
+    double startA = CACurrentMediaTime();
     // render into smaller image view
     UIView *smallView;
     smallView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 200)];
@@ -231,7 +228,6 @@
     imView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, height/ratio)];
     // add image to view
     imView.image = self.theImage;
-    
     [smallView addSubview:imView];
     
     // render to new image
@@ -240,8 +236,9 @@
     
     UIImage *newImg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
+    double endA = CACurrentMediaTime();
     
-    grabbedImage.image = newImg;
+    _grabbedImage.image = newImg;
     self.theImage = newImg;
     
     int iWidth;
@@ -335,18 +332,21 @@
     NSLog(@"done!");
     
     // now create wav file
-    
+    /*
     double startTime = CACurrentMediaTime();
     [self outputToWav:imgIndices withLength:1000];
     double endTime = CACurrentMediaTime();
+    */
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
     NSLog(@"took %f seconds to do total dct",endDct-startDct);
     NSLog(@"took %f seconds to copy data",copytime);
     NSLog(@"took %f seconds to calc dct",dcttime);
     NSLog(@"took %f seconds to match",matchtime);
-    NSLog(@"took %f seconds to build wav",endTime-startTime);
+    NSLog(@"took %f seconds to convert image",endA-startA);
+    //NSLog(@"took %f seconds to build wav",endTime-startTime);
     //NSLog(@"mindc %f maxdc %f",minDc,maxDc);
     
+    /*
     // play the wav file
     NSString *fullWavPath;
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES); 
@@ -356,6 +356,7 @@
     AVAudioPlayer* theAudio=[[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:fullWavPath] error:NULL];  
     theAudio.delegate = self;  
     [theAudio play];
+    */
     
 }
 
@@ -761,16 +762,23 @@
     [self prepareGlyphSignatures];
     
     _captureSession = [[AVCaptureSession alloc] init];
+    _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
     [self addVideoInput];
-    [self addVideoPreviewLayer];
+    //[self addVideoPreviewLayer];
     [self addStillImageOutput];
     
+    /*
     CGRect layerRect = [[[self view] layer] bounds];
     [_previewLayer setBounds:layerRect];
     [_previewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
                                           CGRectGetMidY(layerRect))];
     [[[self view] layer] addSublayer:_previewLayer];
+    */
     [_captureSession startRunning];
+    
+    _grabbedImage = [[UIImageView alloc] init];
+    _grabbedImage.frame = CGRectMake(0, 0, 320, 200);
+    [self.view addSubview:_grabbedImage];
     
     _grabButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     _grabButton.frame = CGRectMake(0, 400, 320, 80);
@@ -849,26 +857,12 @@
 	[_stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection
                                                    completionHandler:^(CMSampleBufferRef imageSampleBuffer, NSError *error)
     {
-        /*
-        CFDictionaryRef exifAttachments = CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
-        if (exifAttachments)
-        {
-            NSLog(@"attachements: %@", exifAttachments);
-        }
-        else
-        {
-            NSLog(@"no attachments");
-        }
-        */
-        
         NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
         UIImage *image = [[UIImage alloc] initWithData:imageData];
-        //[self setStillImage:image];
-        //[image release];
         self.theImage = image;
         [image release];
         [self processImage];
-        //[[NSNotificationCenter defaultCenter] postNotificationName:kImageCapturedSuccessfully object:nil];
+        [self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
     }];
 }
 
