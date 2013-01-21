@@ -109,10 +109,10 @@
 {
     int u,v,i,j;
     double result;
-    double x = 1;
-    double y = 1;
+    //double x = 1;
+    //double y = 1;
     
-    double height = 8;
+    //double height = 8;
     for(u = 0; u < 8; u++) // 
     {
         for(v = 0; v < 8; v++)
@@ -122,16 +122,18 @@
             {
                 for(j = 0; j < 8; j++)
                 {
-                    //x = 1;
-                    //y = 1;
+                    //x = [self alpha:(double)i];
+                    //y = [self alpha:(double)j];
                     
-                    x = [self alpha:(double)i];
-                    y = [self alpha:(double)j];
-                    
-                    result = result + (x*y*
+                    //result = result + (x*y*
+                    /*
+                    result = result + (alphalookup[i][j]*
                                        cos(((M_PI*u)/(2*height))*(2*i + 1))*
                                        cos(((M_PI*v)/(2*height))*(2*j + 1))*
                                        input[i][j]);
+                    */
+                    
+                    result = result + (cosalphalookup[u][v][i][j] * input[i][j]);
                 }
             }
             output[u+v*8] = result / 4.0; //store the results
@@ -681,6 +683,54 @@
     
     dctOutput = (double *)malloc(sizeof(double) * 64);
     
+    alphalookup = (double **)malloc(sizeof(double *) * 8);
+    for (int i = 0; i < 8; i++)
+    {
+        alphalookup[i] = (double *)malloc(sizeof(double) * 8);
+    }
+    
+    // populate alpha lookup table
+    for(int i = 0; i < 8; i++)
+    {
+        for(int j = 0; j < 8; j++)
+        {
+            alphalookup[i][j] = [self alpha:(double)i] * [self alpha:(double)j];
+        }
+    }
+    
+    cosalphalookup = (double ****)malloc(sizeof(double ***) * 8);
+    for (int i = 0; i < 8; i++)
+    {
+        cosalphalookup[i] = (double ***)malloc(sizeof(double **) * 8);
+        for (int j = 0; j < 8; j++)
+        {
+            cosalphalookup[i][j] = (double **)malloc(sizeof(double *) * 8);
+            for (int k = 0; k < 8; k++)
+            {
+                cosalphalookup[i][j][k] = (double *)malloc(sizeof(double) * 8);
+            }
+        }
+
+    }
+    
+    for(int u = 0; u < 8; u++)
+    {
+        for(int v = 0; v < 8; v++)
+        {
+            for(int i = 0; i < 8; i++)
+            {
+                for(int j = 0; j < 8; j++)
+                {
+                    cosalphalookup[u][v][i][j] =  alphalookup[i][j]*
+                                                    cos(((M_PI*u)/(2*8))*(2*i + 1))*
+                                                    cos(((M_PI*v)/(2*8))*(2*j + 1));
+                }
+            }
+        }
+    }
+
+    
+    
     self.imgPicker = [[UIImagePickerController alloc] init];
     self.imgPicker.allowsEditing = NO;
     self.imgPicker.delegate = self;
@@ -688,40 +738,6 @@
     //self.imgPicker.showsCameraControls = NO;
     
     [self prepareGlyphSignatures];
-    
-    /*
-    srand(time(NULL));
-    unsigned char test[2000];
-    for (int x = 0; x < 2000; x++)
-    {
-        test[x] = rand() % 256;
-    }
-    
-    [self outputToWav:test withLength:2000];
-    
-    NSString *fullWavPath;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES); 
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    fullWavPath = [documentsDirectory stringByAppendingString:@"/temp.wav"];
-    
-    
-    //NSString *fullWavPath;
-    //fullWavPath = [[NSBundle mainBundle] pathForResource:@"sine" ofType:@"wav"];
-     
-    //AVPlayer *player = [AVPlayer playerWithURL:[NSURL fileURLWithPath:fullWavPath]];
-    //[player play];
-    
-    // start capture loop
-    //[self performSelector:@selector(grabImage) withObject:nil afterDelay:2.0];
-    
-    
-    AVAudioPlayer* theAudio=[[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:fullWavPath] error:NULL];  
-    theAudio.delegate = self;  
-    [theAudio play];
-    
-     */
-    
-    
 }
 
 - (void)viewDidUnload

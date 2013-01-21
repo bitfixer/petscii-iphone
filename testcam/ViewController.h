@@ -23,6 +23,8 @@
     double *dctOutput;
     double **dctSignatures;
     double **imagedat;
+    double **alphalookup;
+    double ****cosalphalookup;
     //double
 }
 
