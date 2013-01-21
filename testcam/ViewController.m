@@ -140,6 +140,15 @@
 
 - (double)getDctDiffBetween:(double *)inputA and:(double *)inputB
 {
+    
+    double dcDiff = inputA[0]-inputB[0];
+    //NSLog(@"dc diff %f",dcDiff);
+    
+    if (dcDiff > 4000 || dcDiff < -4000)
+    {
+        return DBL_MAX;
+    }
+    
     double score, diff;
     score = 0;
     for (int i = 0; i < 64; i++)
@@ -150,17 +159,17 @@
         score += diff;
     }
     
-    score = sqrt(score);
     return score;
 }
 
 - (int)getMatchingGlyph:(double *)dctSearch
 {
-    double lowest = 999999;
+    double lowest = DBL_MAX;
     double curr_score;
     int matchIndex;
     for (int d = 0; d < 256; d++)
     {
+        //NSLog(@"checking index %d",d);
         curr_score = [self getDctDiffBetween:dctSearch and:dctSignatures[d]];
         
         if (curr_score < lowest)
@@ -169,6 +178,8 @@
             lowest = curr_score;
         }
     }
+    
+    //NSLog(@"match %d",matchIndex);
     
     return matchIndex;
 }
