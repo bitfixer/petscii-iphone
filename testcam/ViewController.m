@@ -367,29 +367,12 @@
             e = CACurrentMediaTime();
             dcttime += e-s;
             
-            //frag = [[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)];
-            
             frag = [_fragmentImageViews objectAtIndex:currImgIndex];
             
             s = CACurrentMediaTime();
             matching = [self getMatchingGlyph:dctOutput];
             e = CACurrentMediaTime();
             matchtime += e-s;
-            
-            /*
-            if (matching < 128)
-            {
-                imgFname = [NSString stringWithFormat:@"%d.png",matching];
-            }
-            else 
-            {
-                imgFname = [NSString stringWithFormat:@"%d_r.png",matching-128];
-            }
-            thisImg = [UIImage imageNamed:imgFname];
-            frag.image = thisImg;
-            
-            [_resultView addSubview:frag];
-            */
             
             frag.image = [_glyphImages objectAtIndex:matching];
             
@@ -404,21 +387,18 @@
     NSLog(@"done!");
     
     // now create wav file
-    /*
     double startTime = CACurrentMediaTime();
-    [self outputToWav:imgIndices withLength:1000];
+    [self outputToWav:_imgIndices withLength:1000];
     double endTime = CACurrentMediaTime();
-    */
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
     NSLog(@"took %f seconds to do total dct",endDct-startDct);
     NSLog(@"took %f seconds to copy data",copytime);
     NSLog(@"took %f seconds to calc dct",dcttime);
     NSLog(@"took %f seconds to match",matchtime);
     NSLog(@"took %f seconds to convert image",endA-startA);
-    //NSLog(@"took %f seconds to build wav",endTime-startTime);
+    NSLog(@"took %f seconds to build wav",endTime-startTime);
     //NSLog(@"mindc %f maxdc %f",minDc,maxDc);
     
-    /*
     // play the wav file
     NSString *fullWavPath;
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -428,8 +408,6 @@
     AVAudioPlayer* theAudio=[[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:fullWavPath] error:NULL];  
     theAudio.delegate = self;  
     [theAudio play];
-    */
-    
 }
 
 -(double) pixelBrightness:(const UInt8 *)imageData: (int)width: (int) x:(int) y
@@ -640,31 +618,10 @@
 
 - (void)outputToWav:(unsigned char *)dataToEncode withLength:(int)dataLength
 {
-    
-    /*
-    // create some samples
-    
-    // duration in seconds
-    double duration = 1.0;
-    double frequency = 2400.0;
-    double sampleRate = 44100.0;
-    double volume = 255.0;
-    double a, da;
-    double currValue;
-    int headerlength = 44;
-    int samplesize = 1;
-    
-    a = 0;
-    da = 2.0 * M_PI * frequency / sampleRate;
-    
-    unsigned char *data;
-    int numsamples = sampleRate * duration;
-    */
-    
-    int carrierBits = 2000;
-    int carrierEndBits = 2000;
+    int carrierBits = 100;
+    int carrierEndBits = 100;
     int numBits = (dataLength * 10) + carrierBits + carrierEndBits;
-    int samplesPerBit = 36;
+    int samplesPerBit = 4;
     long numsamples = numBits * samplesPerBit;
     int samplesize = 1;
     unsigned char *data;
@@ -673,17 +630,6 @@
     data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
 
     int position;
-    //int bit = 0;
-    
-    
-    /*
-    for (int i = 0; i < numBits; i++)
-    {
-        position = 44 + (i * samplesPerBit);
-        [self bitToWav:bit withSamples:samplesPerBit intoBuffer:&data[position]];
-        bit = rand() % 2;
-    }
-    */
     
     int bit;
     unsigned char thisByte;
@@ -970,7 +916,7 @@
         [self processImage];
         double endTime = CACurrentMediaTime();
         NSLog(@"total capture/process %f seconds",endTime-startTime);
-        [self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
+        //[self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
     }];
 }
 
