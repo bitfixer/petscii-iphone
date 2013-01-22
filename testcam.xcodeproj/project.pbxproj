@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		651FB79516AE0193009F9E44 /* PSGrabController.m in Sources */ = {isa = PBXBuildFile; fileRef = 651FB79416AE0193009F9E44 /* PSGrabController.m */; };
 		6585C1811548A61B001910E0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1801548A61B001910E0 /* UIKit.framework */; };
 		6585C1831548A61B001910E0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1821548A61B001910E0 /* Foundation.framework */; };
 		6585C1851548A61B001910E0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1841548A61B001910E0 /* CoreGraphics.framework */; };
@@ -790,6 +791,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		651FB79316AE0193009F9E44 /* PSGrabController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PSGrabController.h; sourceTree = "<group>"; };
+		651FB79416AE0193009F9E44 /* PSGrabController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PSGrabController.m; sourceTree = "<group>"; };
 		6585C17C1548A61B001910E0 /* testcam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = testcam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6585C1801548A61B001910E0 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		6585C1821548A61B001910E0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -1631,6 +1634,8 @@
 				6585C1921548A61B001910E0 /* ViewController.h */,
 				6585C1931548A61B001910E0 /* ViewController.m */,
 				6585C1871548A61B001910E0 /* Supporting Files */,
+				651FB79316AE0193009F9E44 /* PSGrabController.h */,
+				651FB79416AE0193009F9E44 /* PSGrabController.m */,
 			);
 			path = testcam;
 			sourceTree = "<group>";
@@ -3259,6 +3264,7 @@
 				6585C18D1548A61B001910E0 /* main.m in Sources */,
 				6585C1911548A61B001910E0 /* AppDelegate.m in Sources */,
 				6585C1941548A61B001910E0 /* ViewController.m in Sources */,
+				651FB79516AE0193009F9E44 /* PSGrabController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3325,6 +3331,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testcam/testcam-Prefix.pch";
 				INFOPLIST_FILE = "testcam/testcam-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -3336,6 +3343,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testcam/testcam-Prefix.pch";
 				INFOPLIST_FILE = "testcam/testcam-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

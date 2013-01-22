@@ -17,7 +17,7 @@
     UIView *_resultView;
     
     UIImage *_theImage;
-    UIImagePickerController *imgPicker;
+    UIImagePickerController *_imgPicker;
     
     double **dctInput;
     double *dctOutput;

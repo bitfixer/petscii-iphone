@@ -17,7 +17,7 @@
     AVCaptureStillImageOutput *_stillImageOutput;
 }
 
-@synthesize imgPicker;
+@synthesize imgPicker = _imgPicker;
 @synthesize theImage = _theImage;
 
 - (id) init
