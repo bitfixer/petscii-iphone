@@ -621,7 +621,7 @@
     int carrierBits = 100;
     int carrierEndBits = 100;
     int numBits = (dataLength * 10) + carrierBits + carrierEndBits;
-    int samplesPerBit = 4;
+    int samplesPerBit = 8;
     long numsamples = numBits * samplesPerBit;
     int samplesize = 1;
     unsigned char *data;
