@@ -15,10 +15,14 @@
     AVCaptureVideoPreviewLayer *_previewLayer;
     AVCaptureSession *_captureSession;
     AVCaptureStillImageOutput *_stillImageOutput;
+    
+    NSArray *_sortedGlyphSignatures;
+    unsigned char *_imgIndices;
 }
 
 @synthesize imgPicker = _imgPicker;
 @synthesize theImage = _theImage;
+@synthesize sortedGlyphSignatures = _sortedGlyphSignatures;
 
 - (id) init
 {
@@ -123,7 +127,52 @@
         [self dctWithInput:dctInput andOutput:dctSignatures[ch]];
     }
     
-    //NSLog(@"test");
+    // sort the glyph signatures
+    NSMutableArray *signatures = [[[NSMutableArray alloc] init] autorelease];
+    for (int i = 0; i < 256; i++)
+    {
+        NSArray *entry = [NSArray arrayWithObjects:[NSNumber numberWithDouble:dctSignatures[i][0]],
+                                                                              [NSNumber numberWithInt:i],
+                          nil];
+        [signatures addObject:entry];
+    }
+    
+    NSArray *sortedSignatures = [signatures sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2)
+    {
+        NSArray *firstArr = (NSArray *)obj1;
+        NSArray *secondArr = (NSArray *)obj2;
+        
+        NSNumber *first = [firstArr objectAtIndex:0];
+        NSNumber *second = [secondArr objectAtIndex:0];
+        
+        if ([first doubleValue] < [second doubleValue])
+        {
+            return (NSComparisonResult)NSOrderedAscending;
+        }
+        else if ([first doubleValue] > [second doubleValue])
+        {
+            return (NSComparisonResult)NSOrderedDescending;
+        }
+        return (NSComparisonResult)NSOrderedSame;
+    }];
+    
+    
+    /*
+    for (NSArray *arr in sortedSignatures)
+    {
+        NSNumber *dc = (NSNumber *)[arr objectAtIndex:0];
+        NSNumber *ind = (NSNumber *)[arr objectAtIndex:1];
+        double dcval = [dc doubleValue];
+        int i = [ind intValue];
+        
+        NSLog(@"%f %d",dcval, i);
+        
+    }
+    */
+    
+    self.sortedGlyphSignatures = sortedSignatures;
+    
+    NSLog(@"done sorting");
     
 }
 
@@ -187,16 +236,44 @@
     double lowest = DBL_MAX;
     double curr_score;
     int matchIndex;
+    
+    //double dc = dctSearch[0];
+    //double dc_low = dc - 3000.0;
+    //double dc_high = dc + 3000.0;
+    
     for (int d = 0; d < 256; d++)
     {
-        //NSLog(@"checking index %d",d);
-        curr_score = [self getDctDiffBetween:dctSearch and:dctSignatures[d]];
+        /*
+        NSArray *glyphIndexArr = [self.sortedGlyphSignatures objectAtIndex:d];
+        NSNumber *dcval = [glyphIndexArr objectAtIndex:0];
+        double dc = [dcval doubleValue];
         
-        if (curr_score < lowest)
+        // is it below the low threshold?
+        if (dc < dc_low)
         {
-            matchIndex = d;
-            lowest = curr_score;
+            curr_score = DBL_MAX;
         }
+        else if (dc > dc_high)
+        {
+            // we are done
+            d = 256;
+            break;
+        }
+        else
+        {
+            NSNumber *ind = [glyphIndexArr objectAtIndex:1];
+            int i = [ind intValue];
+        */
+            
+            //NSLog(@"checking index %d",d);
+            curr_score = [self getDctDiffBetween:dctSearch and:dctSignatures[d]];
+            if (curr_score < lowest)
+            {
+                matchIndex = d;
+                lowest = curr_score;
+            }
+            
+        //}
     }
     
     //NSLog(@"match %d",matchIndex);
@@ -271,8 +348,7 @@
     
     double startDct = CACurrentMediaTime();
     
-    unsigned char *imgIndices;
-    imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1000);
+    //unsigned char *imgIndices;
     int currImgIndex = 0;
     
     double copytime = 0;
@@ -322,7 +398,7 @@
             [_resultView addSubview:frag];
             
             // add image index
-            imgIndices[currImgIndex] = matching;
+            _imgIndices[currImgIndex] = matching;
             currImgIndex++;
         }
     }
@@ -750,8 +826,8 @@
             }
         }
     }
-
     
+    _imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1000);
     
     self.imgPicker = [[UIImagePickerController alloc] init];
     self.imgPicker.allowsEditing = NO;
@@ -840,6 +916,7 @@
 
 - (void)captureStillImage
 {
+    double startTime = CACurrentMediaTime();
 	AVCaptureConnection *videoConnection = nil;
 	for (AVCaptureConnection *connection in [_stillImageOutput connections]) {
 		for (AVCaptureInputPort *port in [connection inputPorts]) {
@@ -862,6 +939,8 @@
         self.theImage = image;
         [image release];
         [self processImage];
+        double endTime = CACurrentMediaTime();
+        NSLog(@"total capture/process %f seconds",endTime-startTime);
         [self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
     }];
 }

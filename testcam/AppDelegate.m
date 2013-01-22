@@ -9,7 +9,7 @@
 #import "AppDelegate.h"
 
 #import "ViewController.h"
-#import "PSGrabController.h"
+//#import "PSGrabController.h"
 
 @implementation AppDelegate
 
@@ -29,8 +29,8 @@
     // Override point for customization after application launch.
     //self.viewController = (ViewController *)[[UIImagePickerController alloc] init];
     
-    //self.viewController = [[[ViewController alloc] init] autorelease];
-    self.viewController = [[[PSGrabController alloc] init] autorelease];
+    self.viewController = [[[ViewController alloc] init] autorelease];
+    //self.viewController = [[[PSGrabController alloc] init] autorelease];
     
     
     self.window.rootViewController = self.viewController;

@@ -32,6 +32,7 @@
 
 @property (nonatomic, retain) UIImagePickerController *imgPicker;
 @property (nonatomic, retain) UIImage *theImage;
+@property (nonatomic, retain) NSArray *sortedGlyphSignatures;
 
 - (void)writeWavHeader:(unsigned char *)header withNumSamples:(long)numSamples;
 

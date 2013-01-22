@@ -21,7 +21,7 @@
     UIView *_resultView;
     
     UIImage *_theImage;
-    UIImagePickerController *_imgPicker;
+    //UIImagePickerController *_imgPicker;
     
     double **dctInput;
     double *dctOutput;
@@ -161,6 +161,11 @@
     _grabbedImage = [[UIImageView alloc] init];
     _grabbedImage.frame = CGRectMake(0, 0, 320, 200);
     [self.view addSubview:_grabbedImage];
+    
+    _resultView = [[UIView alloc] init];
+    _resultView.frame = CGRectMake(0, 200, 320, 200);
+    _resultView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_resultView];
 }
 
 
@@ -234,8 +239,7 @@
          UIImage *image = [[UIImage alloc] initWithData:imageData];
          self.capturedImage = image;
          [image release];
-         _grabbedImage.image = self.capturedImage;
-         
+         //_grabbedImage.image = self.capturedImage;
          [self processImage];
          //[self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
      }];
