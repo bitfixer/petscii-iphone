@@ -17,7 +17,12 @@
     AVCaptureStillImageOutput *_stillImageOutput;
     
     NSArray *_sortedGlyphSignatures;
+    double *_sortedGlyphDCValues;
+    int *_sortedGlyphIndices;
     unsigned char *_imgIndices;
+    
+    NSMutableArray *_fragmentImageViews;
+    NSMutableArray *_glyphImages;
 }
 
 @synthesize imgPicker = _imgPicker;
@@ -156,8 +161,7 @@
         return (NSComparisonResult)NSOrderedSame;
     }];
     
-    
-    /*
+    int ii = 0;
     for (NSArray *arr in sortedSignatures)
     {
         NSNumber *dc = (NSNumber *)[arr objectAtIndex:0];
@@ -167,8 +171,11 @@
         
         NSLog(@"%f %d",dcval, i);
         
+        _sortedGlyphDCValues[ii] = dcval;
+        _sortedGlyphIndices[ii] = i;
+        
+        ii++;
     }
-    */
     
     self.sortedGlyphSignatures = sortedSignatures;
     
@@ -211,13 +218,14 @@
 
 - (double)getDctDiffBetween:(double *)inputA and:(double *)inputB
 {
-    
+    /*
     double dcDiff = inputA[0]-inputB[0];
     if (dcDiff > 3000 || dcDiff < -3000)
     {
         return DBL_MAX;
     }
-    
+    */
+     
     double score, diff;
     score = 0;
     for (int i = 0; i < 64; i++)
@@ -237,49 +245,32 @@
     double curr_score;
     int matchIndex;
     
-    //double dc = dctSearch[0];
-    //double dc_low = dc - 3000.0;
-    //double dc_high = dc + 3000.0;
+    double dc = dctSearch[0];
+    double dc_low = dc - 3000.0;
+    double dc_high = dc + 3000.0;
+    double currdc;
     
     for (int d = 0; d < 256; d++)
     {
-        /*
-        NSArray *glyphIndexArr = [self.sortedGlyphSignatures objectAtIndex:d];
-        NSNumber *dcval = [glyphIndexArr objectAtIndex:0];
-        double dc = [dcval doubleValue];
-        
-        // is it below the low threshold?
-        if (dc < dc_low)
+        currdc = _sortedGlyphDCValues[d];
+        if (currdc > dc_low)
         {
-            curr_score = DBL_MAX;
-        }
-        else if (dc > dc_high)
-        {
-            // we are done
-            d = 256;
-            break;
-        }
-        else
-        {
-            NSNumber *ind = [glyphIndexArr objectAtIndex:1];
-            int i = [ind intValue];
-        */
-            
-            //NSLog(@"checking index %d",d);
-            curr_score = [self getDctDiffBetween:dctSearch and:dctSignatures[d]];
-            if (curr_score < lowest)
+            if (currdc > dc_high)
             {
-                matchIndex = d;
-                lowest = curr_score;
+                d = 256;
             }
-            
-        //}
+            else
+            {
+                int dd = _sortedGlyphIndices[d];
+                curr_score = [self getDctDiffBetween:dctSearch and:dctSignatures[dd]];
+                if (curr_score < lowest)
+                {
+                    matchIndex = dd;
+                    lowest = curr_score;
+                }
+            }
+        }
     }
-    
-    //NSLog(@"match %d",matchIndex);
-    
-    //double dcDiff = dctSearch[0] - dctSignatures[matchIndex][0];
-    //NSLog(@"match dc diff %f",dcDiff);
     
     return matchIndex;
 }
@@ -332,8 +323,8 @@
     int x,y,xx,yy;
     int matching;
     UIImageView *frag;
-    UIImage *thisImg;
-    NSString *imgFname;
+    //UIImage *thisImg;
+    //NSString *imgFname;
     for (y = 0; y < 200; y++)
     {
         for (x = 0; x < 320; x++)
@@ -376,14 +367,16 @@
             e = CACurrentMediaTime();
             dcttime += e-s;
             
-            frag = [[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)];
+            //frag = [[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)];
+            
+            frag = [_fragmentImageViews objectAtIndex:currImgIndex];
             
             s = CACurrentMediaTime();
             matching = [self getMatchingGlyph:dctOutput];
             e = CACurrentMediaTime();
             matchtime += e-s;
             
-            
+            /*
             if (matching < 128)
             {
                 imgFname = [NSString stringWithFormat:@"%d.png",matching];
@@ -396,6 +389,9 @@
             frag.image = thisImg;
             
             [_resultView addSubview:frag];
+            */
+            
+            frag.image = [_glyphImages objectAtIndex:matching];
             
             // add image index
             _imgIndices[currImgIndex] = matching;
@@ -425,7 +421,7 @@
     /*
     // play the wav file
     NSString *fullWavPath;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES); 
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     fullWavPath = [documentsDirectory stringByAppendingString:@"/temp.wav"];
     
@@ -829,6 +825,44 @@
     
     _imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1000);
     
+    _sortedGlyphDCValues = (double *)malloc(sizeof(double) * 256);
+    _sortedGlyphIndices = (int *)malloc(sizeof(int) * 256);
+    
+    _resultView = [[UIView alloc] init];
+    _resultView.frame = CGRectMake(0, 200, 320, 200);
+    _resultView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_resultView];
+    
+    _fragmentImageViews = [[NSMutableArray alloc] init];
+    
+    for (int y = 0; y < 200; y+= 8)
+    {
+        for (int x = 0; x < 320; x+= 8)
+        {
+            UIImageView *frag = [[[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)] autorelease];
+            [_fragmentImageViews addObject:frag];
+            [_resultView addSubview:frag];
+        }
+    }
+    
+    _glyphImages = [[NSMutableArray alloc] init];
+    
+    for (int i = 0; i < 256; i++)
+    {
+        NSString *imgFname;
+        if (i < 128)
+        {
+            imgFname = [NSString stringWithFormat:@"%d.png",i];
+        }
+        else
+        {
+            imgFname = [NSString stringWithFormat:@"%d_r.png",i-128];
+        }
+        UIImage *thisImg = [UIImage imageNamed:imgFname];
+        
+        [_glyphImages addObject:thisImg];
+    }
+    
     self.imgPicker = [[UIImagePickerController alloc] init];
     self.imgPicker.allowsEditing = NO;
     self.imgPicker.delegate = self;
@@ -860,11 +894,6 @@
     _grabButton.frame = CGRectMake(0, 400, 320, 80);
     [_grabButton addTarget:self action:@selector(captureStillImage) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_grabButton];
-    
-    _resultView = [[UIView alloc] init];
-    _resultView.frame = CGRectMake(0, 200, 320, 200);
-    _resultView.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:_resultView];
 }
 
 - (void)addVideoInput {
