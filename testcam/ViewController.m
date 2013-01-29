@@ -601,9 +601,13 @@
     {
         val = 255;
     }
-    else
+    else if (bit == 1)
     {
         val = 0;
+    }
+    else
+    {
+        val = 128;
     }
     
     for (int i = 0; i < numSamples; i++)
@@ -733,12 +737,14 @@
     int carrierBits = 100;
     int carrierEndBits = 100;
     int numBits = (dataLength * 10) + carrierBits + carrierEndBits;
-    int samplesPerBit = 5;
-    long numsamples = numBits * samplesPerBit;
+    int samplesPerBit = 2;
+    //long numsamples = numBits * samplesPerBit;
+    long numsamples = (numBits / 2.0) * 5;
     int samplesize = 1;
     unsigned char *data;
     int headerlength = 44;
     
+    //data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
     data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
 
     int position;
@@ -748,6 +754,7 @@
     unsigned char bitmask;
     position = 44;
     
+    int extraBit = 0;
     // add the carrier at the start, these are '1' bits
     for (int c = 0; c < carrierBits; c++)
     {
@@ -757,9 +764,10 @@
     
     for (int b = 0; b < dataLength; b++)
     {
+        extraBit = 0;
         // start bit
-        [self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
-        position += samplesPerBit;
+        [self bitToWav:0 withSamples:(samplesPerBit+extraBit) intoBuffer:&data[position]];
+        position += samplesPerBit+extraBit;
         
         thisByte = dataToEncode[b];
                 
@@ -771,15 +779,25 @@
             bit = (thisByte & bitmask) >> theBit;
             bitmask = bitmask << 1;
             
+            if (extraBit == 0)
+            {
+                extraBit = 1;
+            }
+            else
+            {
+                extraBit = 0;
+            }
+            
             //position = 44 + (((b*10)+1+theBit) * samplesPerBit);
-            [self bitToWav:bit withSamples:samplesPerBit intoBuffer:&data[position]];
-            position += samplesPerBit;
+            [self bitToWav:bit withSamples:(samplesPerBit+extraBit) intoBuffer:&data[position]];
+            position += samplesPerBit+extraBit;
         }
         
         // stop bit
+        extraBit = 1;
         
-        [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
-        position += samplesPerBit;
+        [self bitToWav:1 withSamples:(samplesPerBit+extraBit) intoBuffer:&data[position]];
+        position += samplesPerBit+extraBit;
     }
     
     // add the carrier at the end, these are '1' bits
