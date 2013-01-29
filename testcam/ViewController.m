@@ -388,7 +388,18 @@
     
     // now create wav file
     double startTime = CACurrentMediaTime();
-    [self outputToWav:_imgIndices withLength:1000];
+    //[self outputToWav:_imgIndices withLength:1000];
+    
+    // test
+    
+    
+    for (int i = 0; i < 26; i++)
+    {
+        _imgIndices[i] = 'A'+i;
+    }
+    [self outputToWav:_imgIndices withLength:26];
+    
+     
     double endTime = CACurrentMediaTime();
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
     NSLog(@"took %f seconds to do total dct",endDct-startDct);
@@ -432,7 +443,7 @@
     return dist;
 }
 
-- (void)writeWavHeader:(unsigned char *)header withNumSamples:(int)numSamples
+- (void)writeWavHeader:(unsigned char *)header withNumSamples:(long)numSamples
 {
     int ChunkSizeStart = 4;
     int FormatStart = 8;
@@ -480,8 +491,15 @@
     header[NumChannelsStart+1] = 0;
     
     // write sampleRate
+    /*
     header[SampleRateStart] = 0x44;
     header[SampleRateStart+1] = 0xAC;
+    header[SampleRateStart+2] = 0;
+    header[SampleRateStart+3] = 0; // 44100
+    */
+    
+    header[SampleRateStart] = 0x80;
+    header[SampleRateStart+1] = 0xBB;
     header[SampleRateStart+2] = 0;
     header[SampleRateStart+3] = 0; // 44100
     
@@ -489,8 +507,15 @@
     // SampleRate * NumChannels * BitsPerSample/8
     // ie 44100 * 1 * 1 = 44100
     
+    /*
     header[ByteRateStart] = 0x44;
     header[ByteRateStart+1] = 0xAC;
+    header[ByteRateStart+2] = 0;
+    header[ByteRateStart+3] = 0;
+    */
+    
+    header[ByteRateStart] = 0x80;
+    header[ByteRateStart+1] = 0xBB;
     header[ByteRateStart+2] = 0;
     header[ByteRateStart+3] = 0;
     
@@ -549,7 +574,41 @@
     
 }
 
-- (void)bitToWav:(int)bit withSamples:(long)numSamples intoBuffer:(unsigned char *)buffer
+- (void)bitToWav:(int)bit
+     withSamples:(long)numSamples
+      intoBuffer:(unsigned char *)buffer
+{
+    [self bitToWav:bit withSamples:numSamples intoBuffer:buffer squareWave:YES];
+}
+
+
+- (void)bitToWav:(int)bit
+     withSamples:(long)numSamples
+      intoBuffer:(unsigned char *)buffer
+      squareWave:(BOOL)squareWave
+{
+    
+    unsigned char val;
+    if (bit == 0)
+    {
+        val = 255;
+    }
+    else
+    {
+        val = 0;
+    }
+    
+    for (int i = 0; i < numSamples; i++)
+    {
+        buffer[i] = val;
+    }
+}
+
+
+- (void)bitToWav2:(int)bit
+     withSamples:(long)numSamples
+      intoBuffer:(unsigned char *)buffer
+      squareWave:(BOOL)squareWave
 {
     double sampleRate = 44100.0;
     
@@ -566,83 +625,72 @@
         cycles = 2;
     }
     
-    
-    /*
-    int phaseCycles = numSamples / (cycles*2);
-    
-    unsigned char val;
-    int currCycle = 0;
-    for (int i = 0; i < cycles; i++)
+    if (squareWave)
     {
-        val = 0;
-        for (int j = 0; j < phaseCycles; j++)
-        {
-            buffer[currCycle] = val;
-            currCycle++;
-        }
+        int phaseCycles = numSamples / (cycles*2);
         
-        val = 255;
-        for (int j = 0; j < phaseCycles; j++)
+        unsigned char val;
+        int currCycle = 0;
+        for (int i = 0; i < cycles; i++)
         {
-            buffer[currCycle] = val;
-            currCycle++;
+            val = 0;
+            for (int j = 0; j < phaseCycles; j++)
+            {
+                buffer[currCycle] = val;
+                currCycle++;
+            }
+            
+            val = 255;
+            for (int j = 0; j < phaseCycles; j++)
+            {
+                buffer[currCycle] = val;
+                currCycle++;
+            }
         }
     }
-    */
-     
-    //frequency = 1.0 / ( ((double)numSamples / ((double)(cycles*2)) / 44100.0) );
-    
-    frequency = sampleRate / (numSamples / (double)cycles);
-    
-    //frequency = 500;
-    
-    
-    double a, da;
-    a = 0;
-    da = 2.0 * M_PI * frequency / sampleRate;
-    
-    for (int s = 0; s < numSamples; s++)
+    else
     {
-        currValue = (sin(a) + 1.0) * volume * 0.5;
-        buffer[s] = round(currValue);
-        a = a + da;
+        frequency = sampleRate / (numSamples / (double)cycles);
         
-        if (a > 2.0 * M_PI)
+        double a, da;
+        a = 0;
+        da = 2.0 * M_PI * frequency / sampleRate;
+        
+        for (int s = 0; s < numSamples; s++)
         {
-            a -= 2.0 * M_PI;
+            currValue = (sin(a) + 1.0) * volume * 0.5;
+            buffer[s] = round(currValue);
+            a = a + da;
+            
+            if (a > 2.0 * M_PI)
+            {
+                a -= 2.0 * M_PI;
+            }
+            
         }
-        
     }
-    
 }
 
+/*
 - (void)outputToWav:(unsigned char *)dataToEncode withLength:(int)dataLength
 {
-    int carrierBits = 100;
-    int carrierEndBits = 100;
+    int carrierBits = 0;
+    int carrierEndBits = 0;
     int numBits = (dataLength * 10) + carrierBits + carrierEndBits;
-    int samplesPerBit = 8;
+    int samplesPerBit = 5;
     long numsamples = numBits * samplesPerBit;
     int samplesize = 1;
     unsigned char *data;
     int headerlength = 44;
     
     data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
-
+    
     int position;
     
     int bit;
     unsigned char thisByte;
     unsigned char bitmask;
     position = 44;
-    
-    // add the carrier at the start, these are '1' bits
-    for (int c = 0; c < carrierBits; c++)
-    {
-        [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
-        position += samplesPerBit;
-    }
-    
     
     for (int b = 0; b < dataLength; b++)
     {
@@ -669,11 +717,85 @@
         [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
         position += samplesPerBit;
     }
+}
+*/
+
+- (void)outputToWav:(unsigned char *)dataToEncode withLength:(int)dataLength
+{
+    int carrierBits = 100;
+    int carrierEndBits = 100;
+    int numBits = (dataLength * 10) + carrierBits + carrierEndBits;
+    int samplesPerBit = 5;
+    long numsamples = numBits * samplesPerBit;
+    int samplesize = 1;
+    unsigned char *data;
+    int headerlength = 44;
+    
+    data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
+
+    int position;
+    
+    int bit;
+    unsigned char thisByte;
+    unsigned char bitmask;
+    position = 44;
+    
+    // add the carrier at the start, these are '1' bits
+    for (int c = 0; c < carrierBits; c++)
+    {
+        [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
+        position += samplesPerBit;
+    }
+    
+    
+    for (int b = 0; b < dataLength; b++)
+    {
+        // start bit
+        [self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
+        //[self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
+        position += samplesPerBit;
+        
+        thisByte = dataToEncode[b];
+        /*
+        bitmask = 0x80;
+        
+        // data bits
+        for (int theBit = 0; theBit < 8; theBit++)
+        {
+            bit = (thisByte & bitmask) >> 7-theBit;
+            bitmask = bitmask >> 1;
+            
+            //position = 44 + (((b*10)+1+theBit) * samplesPerBit);
+            [self bitToWav:bit withSamples:samplesPerBit intoBuffer:&data[position]];
+            position += samplesPerBit;
+        }
+        */
+        
+        bitmask = 0x01;
+        
+        // data bits
+        for (int theBit = 0; theBit < 8; theBit++)
+        {
+            bit = (thisByte & bitmask) >> theBit;
+            bitmask = bitmask << 1;
+            
+            //position = 44 + (((b*10)+1+theBit) * samplesPerBit);
+            [self bitToWav:bit withSamples:samplesPerBit intoBuffer:&data[position]];
+            position += samplesPerBit;
+        }
+        
+        // stop bit
+        
+        [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
+        //[self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
+        position += samplesPerBit;
+    }
     
     // add the carrier at the end, these are '1' bits
     for (int c = 0; c < carrierEndBits; c++)
     {
         [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
+        //[self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
         position += samplesPerBit;
     }
      
