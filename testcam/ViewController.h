@@ -10,7 +10,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 
-@interface ViewController : UIViewController <UINavigationControllerDelegate, UIImagePickerControllerDelegate, AVAudioPlayerDelegate>
+@interface ViewController : UIViewController <UINavigationControllerDelegate,
+UIImagePickerControllerDelegate, AVAudioPlayerDelegate, AVCaptureVideoDataOutputSampleBufferDelegate>
 {
     UIImageView *_grabbedImage;
     UIButton *_grabButton;

@@ -15,6 +15,7 @@
     AVCaptureVideoPreviewLayer *_previewLayer;
     AVCaptureSession *_captureSession;
     AVCaptureStillImageOutput *_stillImageOutput;
+    AVCaptureVideoDataOutput *_dataOutput;
     
     NSArray *_sortedGlyphSignatures;
     double *_sortedGlyphDCValues;
@@ -23,6 +24,7 @@
     
     NSMutableArray *_fragmentImageViews;
     NSMutableArray *_glyphImages;
+    BOOL _shouldCaptureNow;
 }
 
 @synthesize imgPicker = _imgPicker;
@@ -747,30 +749,14 @@
         position += samplesPerBit;
     }
     
-    
     for (int b = 0; b < dataLength; b++)
     {
         // start bit
         [self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
-        //[self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
         position += samplesPerBit;
         
         thisByte = dataToEncode[b];
-        /*
-        bitmask = 0x80;
-        
-        // data bits
-        for (int theBit = 0; theBit < 8; theBit++)
-        {
-            bit = (thisByte & bitmask) >> 7-theBit;
-            bitmask = bitmask >> 1;
-            
-            //position = 44 + (((b*10)+1+theBit) * samplesPerBit);
-            [self bitToWav:bit withSamples:samplesPerBit intoBuffer:&data[position]];
-            position += samplesPerBit;
-        }
-        */
-        
+                
         bitmask = 0x01;
         
         // data bits
@@ -787,7 +773,6 @@
         // stop bit
         
         [self bitToWav:1 withSamples:samplesPerBit intoBuffer:&data[position]];
-        //[self bitToWav:0 withSamples:samplesPerBit intoBuffer:&data[position]];
         position += samplesPerBit;
     }
     
@@ -943,15 +928,15 @@
     _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
     [self addVideoInput];
     //[self addVideoPreviewLayer];
-    [self addStillImageOutput];
+    [self addVideoOutput];
+    //[self addStillImageOutput];
     
-    /*
     CGRect layerRect = [[[self view] layer] bounds];
     [_previewLayer setBounds:layerRect];
     [_previewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
                                           CGRectGetMidY(layerRect))];
     [[[self view] layer] addSublayer:_previewLayer];
-    */
+    
     [_captureSession startRunning];
     
     _grabbedImage = [[UIImageView alloc] init];
@@ -988,6 +973,20 @@
     
 }
 
+- (void)addVideoOutput
+{
+    _dataOutput = [AVCaptureVideoDataOutput new];
+    _dataOutput.alwaysDiscardsLateVideoFrames = YES;
+    _dataOutput.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA]
+                                                            forKey:(NSString *)kCVPixelBufferPixelFormatTypeKey];
+    
+    dispatch_queue_t outQueue = dispatch_queue_create("com.sugoisystems.captureQueue", NULL);
+    [_dataOutput setSampleBufferDelegate:self queue:outQueue];
+    
+    NSLog(@"cant _dataOutput? %i", [_captureSession canAddOutput:_dataOutput]);
+    [_captureSession addOutput:_dataOutput];
+}
+
 - (void)addStillImageOutput
 {
     _stillImageOutput = [[[AVCaptureStillImageOutput alloc] init] autorelease];
@@ -1010,9 +1009,80 @@
     [_captureSession addOutput:_stillImageOutput];
 }
 
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection
+{
+    /*
+    if ([_runningDelegates count])
+    {
+        NSAutoreleasePool *pool = [NSAutoreleasePool new];
+        
+        CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
+        
+        dispatch_sync(dispatch_get_main_queue(), ^ {
+            for (id<MIVideoSourceDelegate> d in _runningDelegates)
+            {
+                if ([d respondsToSelector:@selector(videoSource:didOutputSampleBufferImage:)])
+                {
+                    [d videoSource:self didOutputSampleBufferImage:imgBuf];
+                }
+            }
+        });
+        
+        [pool drain];
+    }
+    */
+    
+    //NSLog(@"video capture delegate");
+
+    if (_shouldCaptureNow)
+    {
+        _shouldCaptureNow = NO;
+        CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
+        NSLog(@"capturing now!");
+        
+        UIImage *image = [self getImageFromSampleBuffer:imgBuf];
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            self.theImage = image;
+            [image release];
+            [self processImage];
+            //double endTime = CACurrentMediaTime();
+            //NSLog(@"total capture/process %f seconds",endTime-startTime);
+        });
+    }
+}
+
+- (UIImage *)getImageFromSampleBuffer:(CVImageBufferRef)frame
+{
+    CIImage *img = [CIImage imageWithCVPixelBuffer:frame options:NULL];
+    
+    CGFloat bh = (CGFloat)CVPixelBufferGetHeight(frame);
+    CGFloat bw = (CGFloat)CVPixelBufferGetWidth(frame);
+    CGFloat s = MIN(bh, bw);
+    
+    CGRect r = CGRectMake((bw - s) / 2.0f, (bh - s) / 2.0f, s, s);
+    
+    CIContext *_ciContext = [[CIContext contextWithOptions:nil] retain];
+    CGImageRef cimg = [_ciContext createCGImage:img fromRect:r];
+    
+    UIImageOrientation orient;
+    orient = UIImageOrientationRight;
+    
+    UIImage *vimg = [UIImage imageWithCGImage:cimg scale:1 orientation:orient];
+    CGImageRelease(cimg);
+    
+    return vimg;
+}
+
+
 
 - (void)captureStillImage
 {
+    _shouldCaptureNow = YES;
+    //_previewLayer
+    
+    /*
     double startTime = CACurrentMediaTime();
 	AVCaptureConnection *videoConnection = nil;
 	for (AVCaptureConnection *connection in [_stillImageOutput connections]) {
@@ -1040,6 +1110,7 @@
         NSLog(@"total capture/process %f seconds",endTime-startTime);
         //[self performSelector:@selector(captureStillImage) withObject:nil afterDelay:0.0];
     }];
+    */
 }
 
 - (void)viewDidUnload

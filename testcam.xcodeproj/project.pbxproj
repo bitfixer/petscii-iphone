@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		651FB79516AE0193009F9E44 /* PSGrabController.m in Sources */ = {isa = PBXBuildFile; fileRef = 651FB79416AE0193009F9E44 /* PSGrabController.m */; };
+		652374A116B79C2C00FBA577 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 652374A016B79C2C00FBA577 /* CoreVideo.framework */; };
+		652374A416B79EFE00FBA577 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 652374A316B79EFE00FBA577 /* CoreImage.framework */; };
+		652374A616B79F2600FBA577 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 652374A516B79F2600FBA577 /* CoreMedia.framework */; };
 		6585C1811548A61B001910E0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1801548A61B001910E0 /* UIKit.framework */; };
 		6585C1831548A61B001910E0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1821548A61B001910E0 /* Foundation.framework */; };
 		6585C1851548A61B001910E0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6585C1841548A61B001910E0 /* CoreGraphics.framework */; };
@@ -793,6 +796,9 @@
 /* Begin PBXFileReference section */
 		651FB79316AE0193009F9E44 /* PSGrabController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PSGrabController.h; sourceTree = "<group>"; };
 		651FB79416AE0193009F9E44 /* PSGrabController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PSGrabController.m; sourceTree = "<group>"; };
+		652374A016B79C2C00FBA577 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		652374A316B79EFE00FBA577 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		652374A516B79F2600FBA577 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		6585C17C1548A61B001910E0 /* testcam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = testcam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6585C1801548A61B001910E0 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		6585C1821548A61B001910E0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -1585,6 +1591,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				652374A616B79F2600FBA577 /* CoreMedia.framework in Frameworks */,
+				652374A416B79EFE00FBA577 /* CoreImage.framework in Frameworks */,
+				652374A116B79C2C00FBA577 /* CoreVideo.framework in Frameworks */,
 				65FA514716AC7D470042E1D1 /* QuartzCore.framework in Frameworks */,
 				65BDEE861549DFA9000C8B18 /* AVFoundation.framework in Frameworks */,
 				6585C1811548A61B001910E0 /* UIKit.framework in Frameworks */,
@@ -1599,6 +1608,9 @@
 		6585C1711548A61A001910E0 = {
 			isa = PBXGroup;
 			children = (
+				652374A516B79F2600FBA577 /* CoreMedia.framework */,
+				652374A316B79EFE00FBA577 /* CoreImage.framework */,
+				652374A016B79C2C00FBA577 /* CoreVideo.framework */,
 				65FA514616AC7D470042E1D1 /* QuartzCore.framework */,
 				65BDEE851549DFA9000C8B18 /* AVFoundation.framework */,
 				6585C1861548A61B001910E0 /* testcam */,
