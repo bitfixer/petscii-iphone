@@ -394,13 +394,19 @@
     
     // test
     
-    
+    /*
     for (int i = 0; i < 26; i++)
     {
         _imgIndices[i] = 'A'+i;
+        _imgIndices[1000-26+i] = 'A'+i;
     }
-    [self outputToWav:_imgIndices withLength:26];
+    */
     
+    for (int i = 0; i < 1000; i++)
+    {
+        _imgIndices[i] = i % 256;
+    }
+    [self outputToWav:_imgIndices withLength:1000];
      
     double endTime = CACurrentMediaTime();
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
