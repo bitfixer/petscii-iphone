@@ -379,7 +379,7 @@
             frag.image = [_glyphImages objectAtIndex:matching];
             
             // add image index
-            _imgIndices[currImgIndex] = matching;
+            _imgIndices[currImgIndex+10] = matching;
             currImgIndex++;
         }
     }
@@ -390,23 +390,22 @@
     
     // now create wav file
     double startTime = CACurrentMediaTime();
-    //[self outputToWav:_imgIndices withLength:1000];
     
-    // test
+    for (int i = 0; i < 9; i++)
+    {
+        _imgIndices[i] = 0xff;
+    }
+    
+    _imgIndices[9] = 0x00;
     
     /*
-    for (int i = 0; i < 26; i++)
+    for (int i = 10; i < 1010; i++)
     {
-        _imgIndices[i] = 'A'+i;
-        _imgIndices[1000-26+i] = 'A'+i;
+        _imgIndices[i] = (i-10) % 256;
     }
     */
     
-    for (int i = 0; i < 1000; i++)
-    {
-        _imgIndices[i] = i % 256;
-    }
-    [self outputToWav:_imgIndices withLength:1000];
+    [self outputToWav:_imgIndices withLength:1010];
      
     double endTime = CACurrentMediaTime();
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
@@ -740,9 +739,11 @@
     int samplesPerBit = 2;
     //long numsamples = numBits * samplesPerBit;
     long numsamples = (numBits / 2.0) * 5;
+    
     int samplesize = 1;
     unsigned char *data;
     int headerlength = 44;
+    int extraBitSize = 1;
     
     //data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
     data = (unsigned char *)malloc(sizeof(unsigned char)*((numsamples*samplesize) + headerlength));
@@ -781,7 +782,7 @@
             
             if (extraBit == 0)
             {
-                extraBit = 1;
+                extraBit = extraBitSize;
             }
             else
             {
@@ -794,7 +795,7 @@
         }
         
         // stop bit
-        extraBit = 1;
+        extraBit = extraBitSize;
         
         [self bitToWav:1 withSamples:(samplesPerBit+extraBit) intoBuffer:&data[position]];
         position += samplesPerBit+extraBit;
@@ -900,7 +901,7 @@
         }
     }
     
-    _imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1000);
+    _imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1010);
     
     _sortedGlyphDCValues = (double *)malloc(sizeof(double) * 256);
     _sortedGlyphIndices = (int *)malloc(sizeof(int) * 256);
