@@ -25,6 +25,7 @@
     NSMutableArray *_fragmentImageViews;
     NSMutableArray *_glyphImages;
     BOOL _shouldCaptureNow;
+    double _nextCaptureTime;
 }
 
 @synthesize imgPicker = _imgPicker;
@@ -189,8 +190,10 @@
 {
     int u,v,i,j;
     double result;
+    int outputindex = 0;
     for(u = 0; u < 8; u++) // 
     {
+        outputindex = u;
         for(v = 0; v < 8; v++)
         {
             result = 0; // reset summed results to 0
@@ -201,7 +204,9 @@
                     result = result + (cosalphalookup[u][v][i][j] * input[i][j]);
                 }
             }
-            output[u+v*8] = result; //store the results
+            //output[u+v*8] = result; //store the results
+            output[outputindex] = result;
+            outputindex += 8;
         }
     }
 }
@@ -295,7 +300,8 @@
     smallView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 200)];
     
     UIImageView *imView;
-    imView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 320, height/ratio)];
+    imView = [[UIImageView alloc] initWithFrame:CGRectMake(0, -60, 320, height/ratio)];
+    imView.transform = CGAffineTransformMakeScale(-1.0, 1.0);
     // add image to view
     imView.image = self.theImage;
     [smallView addSubview:imView];
@@ -307,7 +313,7 @@
     UIImage *newImg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     double endA = CACurrentMediaTime();
-    
+     
     _grabbedImage.image = newImg;
     self.theImage = newImg;
     
@@ -318,15 +324,11 @@
     NSLog(@"image new size: %d %f",iWidth, height);
     CFDataRef pixelData = CGDataProviderCopyData(CGImageGetDataProvider(self.theImage.CGImage));
     const UInt8* data = CFDataGetBytePtr(pixelData);
-    
-    
     double startImConvert = CACurrentMediaTime();
     
     int x,y,xx,yy;
     int matching;
     UIImageView *frag;
-    //UIImage *thisImg;
-    //NSString *imgFname;
     for (y = 0; y < 200; y++)
     {
         for (x = 0; x < 320; x++)
@@ -397,13 +399,6 @@
     }
     
     _imgIndices[9] = 0x00;
-    
-    /*
-    for (int i = 10; i < 1010; i++)
-    {
-        _imgIndices[i] = (i-10) % 256;
-    }
-    */
     
     [self outputToWav:_imgIndices withLength:1010];
      
@@ -833,6 +828,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    _nextCaptureTime = 0;
 	// Do any additional setup after loading the view, typically from a nib.
     
     imagedat = (double **)malloc(sizeof(double *) * 320.0);
@@ -952,21 +948,32 @@
     _captureSession = [[AVCaptureSession alloc] init];
     _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
     [self addVideoInput];
-    //[self addVideoPreviewLayer];
+    [self addVideoPreviewLayer];
     [self addVideoOutput];
     //[self addStillImageOutput];
     
+    /*
     CGRect layerRect = [[[self view] layer] bounds];
     [_previewLayer setBounds:layerRect];
     [_previewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
                                           CGRectGetMidY(layerRect))];
+    */
+    CGRect layerRect = CGRectMake(0, -42.5, 120, 160);
+    [_previewLayer setBounds:layerRect];
+    [_previewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
+                                           CGRectGetMidY(layerRect))];
+    _previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     [[[self view] layer] addSublayer:_previewLayer];
+    
+    UIView *maskView = [[[UIView alloc] initWithFrame:CGRectMake(0, 75.0, 120, 42.5)] autorelease];
+    maskView.backgroundColor = [UIColor blackColor];
+    [self.view addSubview:maskView];
     
     [_captureSession startRunning];
     
-    _grabbedImage = [[UIImageView alloc] init];
-    _grabbedImage.frame = CGRectMake(0, 0, 320, 200);
-    [self.view addSubview:_grabbedImage];
+    //_grabbedImage = [[UIImageView alloc] init];
+    //_grabbedImage.frame = CGRectMake(0, 0, 320, 200);
+    //[self.view addSubview:_grabbedImage];
     
     _grabButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     _grabButton.frame = CGRectMake(0, 400, 320, 80);
@@ -975,8 +982,18 @@
 }
 
 - (void)addVideoInput {
-	AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-	if (videoDevice) {
+	//AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+	NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *videoDevice = nil;
+    for (AVCaptureDevice *dev in videoDevices)
+    {
+        if (dev.position == AVCaptureDevicePositionFront)
+        {
+            videoDevice = dev;
+        }
+    }
+    
+    if (videoDevice) {
 		NSError *error;
 		AVCaptureDeviceInput *videoIn = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
 		if (!error) {
@@ -1038,43 +1055,23 @@
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection
 {
-    /*
-    if ([_runningDelegates count])
-    {
-        NSAutoreleasePool *pool = [NSAutoreleasePool new];
-        
-        CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
-        
-        dispatch_sync(dispatch_get_main_queue(), ^ {
-            for (id<MIVideoSourceDelegate> d in _runningDelegates)
-            {
-                if ([d respondsToSelector:@selector(videoSource:didOutputSampleBufferImage:)])
-                {
-                    [d videoSource:self didOutputSampleBufferImage:imgBuf];
-                }
-            }
-        });
-        
-        [pool drain];
-    }
-    */
-    
-    //NSLog(@"video capture delegate");
-
     if (_shouldCaptureNow)
     {
-        _shouldCaptureNow = NO;
-        CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
-        NSLog(@"capturing now!");
-        
-        UIImage *image = [self getImageFromSampleBuffer:imgBuf];
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            self.theImage = image;
-            [image release];
-            [self processImage];
-            //double endTime = CACurrentMediaTime();
-            //NSLog(@"total capture/process %f seconds",endTime-startTime);
-        });
+        double currTime = CACurrentMediaTime();
+        if (currTime > _nextCaptureTime)
+        {
+            _nextCaptureTime = currTime + 1.0;
+            //_shouldCaptureNow = NO;
+            CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
+            NSLog(@"capturing now!");
+            
+            UIImage *image = [self getImageFromSampleBuffer:imgBuf];
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                self.theImage = image;
+                [image release];
+                [self processImage];
+            });
+        }
     }
 }
 
