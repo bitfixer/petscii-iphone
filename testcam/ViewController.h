@@ -23,10 +23,14 @@ UIImagePickerControllerDelegate, AVAudioPlayerDelegate, AVCaptureVideoDataOutput
     double **dctWeights;
     double **dctInput;
     double *dctOutput;
+    double **dctVert;
     double **dctSignatures;
     double **imagedat;
     double **alphalookup;
     double ****cosalphalookup;
+    
+    double *alphalookup1d;
+    double **cosalphalookup1d;
     //double
 }
 

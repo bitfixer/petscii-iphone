@@ -266,9 +266,44 @@
 {
     double result;
     int outputindex = 0;
-    //int limit = GLYPH_DIM;
-    //int limit = 2;
     
+    // first do 1d DCT on columns
+    for (int x = 0; x < GLYPH_DIM; x++)
+    {
+        for (int v = 0; v < GLYPH_DIM; v++)
+        {
+            result = 0;
+            for (int j = 0; j < GLYPH_DIM; j++)
+            {
+                result += cosalphalookup1d[v][j] * input[x][j];
+            }
+            dctVert[x][v] = result;
+        }
+    }
+    
+    // now do 1d DCT on rows
+    for (int y = 0; y < GLYPH_DIM; y++)
+    {
+        for (int u = 0; u < GLYPH_DIM; u++)
+        {
+            result = 0;
+            if (dctWeights[u][y] > 0.3)
+            {
+                for (int i = 0; i < GLYPH_DIM; i++)
+                {
+                    result += cosalphalookup1d[u][i] * dctVert[i][y];
+                }
+                output[outputindex] = result*dctWeights[u][y];
+            }
+            else
+            {
+                output[outputindex] = 0;
+            }
+            outputindex++;
+        }
+    }
+    
+    /*
     for(int u = 0; u < GLYPH_DIM; u++) //
     {
         outputindex = u;
@@ -294,6 +329,7 @@
             outputindex += GLYPH_DIM;
         }
     }
+    */
 }
 
 - (double)alpha:(double)e
@@ -335,10 +371,9 @@
     //int limit = GLYPH_DIM/2;
     int limit = GLYPH_DIM;
     int index = 0;
-    for (int u = 0; u < limit; u++)
+    for (int v = 0; v < limit; v++)
     {
-        index = u;
-        for (int v = 0; v < limit; v++)
+        for (int u = 0; u < limit; u++)
         {
             if (dctWeights[u][v] > 0.3)
             {
@@ -347,7 +382,8 @@
                 score += diff;
             }
             
-            index += GLYPH_DIM;
+            //index += GLYPH_DIM;
+            index++;
         }
     }
      
@@ -981,7 +1017,39 @@
         dctInput[i] = (double *)malloc(sizeof(double) * GLYPH_DIM);
     }
     
+    dctVert = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
+    {
+        dctVert[i] = (double *)malloc(sizeof(double) * GLYPH_DIM);
+    }
+    
     dctOutput = (double *)malloc(sizeof(double) * GLYPH_DIM_SQ);
+    
+    alphalookup1d = (double *)malloc(sizeof(double) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
+    {
+        alphalookup1d[i] = [self alpha:(double)i];
+    }
+    
+    cosalphalookup1d = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
+    {
+        cosalphalookup1d[i] = (double *)malloc(sizeof(double) * GLYPH_DIM);
+    }
+    
+    for (int u = 0; u < GLYPH_DIM; u++)
+    {
+        for (int i = 0; i < GLYPH_DIM; i++)
+        {
+            cosalphalookup1d[u][i] = alphalookup1d[i] *
+            cos(((M_PI*u)/(2*GLYPH_DIM))*(2*i + 1));
+            
+            //cosalphalookup[u][v][i][j] =  alphalookup[i][j]*
+            //cos(((M_PI*u)/(2*GLYPH_DIM))*(2*i + 1))*
+            //cos(((M_PI*v)/(2*GLYPH_DIM))*(2*j + 1));
+        }
+    }
+    
     
     alphalookup = (double **)malloc(sizeof(double *) * GLYPH_DIM);
     for (int i = 0; i < GLYPH_DIM; i++)
