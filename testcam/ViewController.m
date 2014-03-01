@@ -13,6 +13,7 @@
 #define GLYPH_DIM       8
 #define GLYPH_DIM_SQ    64
 #define GLYPH_OUT_DIM   8
+#define DCT_WEIGHT_LIMIT 0.3
 
 @implementation ViewController
 {
@@ -294,12 +295,8 @@
                     result += cosalphalookup1d[u][i] * dctVert[i][y];
                 }
                 output[outputindex] = result*dctWeights[u][y];
+                outputindex++;
             }
-            else
-            {
-                output[outputindex] = 0;
-            }
-            outputindex++;
         }
     }
     
@@ -357,18 +354,16 @@
     double score, diff;
     score = 0;
     
-    /*
-    for (int i = 0; i < GLYPH_DIM_SQ; i++)
+    for (int i = 0; i < _dctCoeffCheckLimit; i++)
     {
         diff = (inputA[i]-inputB[i]);
         diff = diff*diff;
-        
         score += diff;
     }
-    */
      
     
     //int limit = GLYPH_DIM/2;
+    /*
     int limit = GLYPH_DIM;
     int index = 0;
     for (int v = 0; v < limit; v++)
@@ -386,6 +381,7 @@
             index++;
         }
     }
+    */
      
     return score;
 }
@@ -1097,6 +1093,7 @@
         }
     }
     
+    _dctCoeffCheckLimit = 0;
     dctWeights = (double **)malloc(sizeof(double *) * GLYPH_DIM);
     for (int u = 0; u < GLYPH_DIM; u++)
     {
@@ -1107,6 +1104,11 @@
             double dist = sqrt((double)(u*u + v*v));
             double weight = sqrt(pow(0.5, dist));
             dctWeights[u][v] = weight;
+            
+            if (weight > DCT_WEIGHT_LIMIT)
+            {
+                _dctCoeffCheckLimit++;
+            }
         }
     }
     
