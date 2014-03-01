@@ -14,6 +14,8 @@
 #define GLYPH_DIM_SQ    64
 #define GLYPH_OUT_DIM   8
 #define DCT_WEIGHT_LIMIT 0.3
+#define COLOR_LEVELS 128
+#define COLOR_BIT_SHIFT 1
 
 @implementation ViewController
 {
@@ -440,7 +442,7 @@
     smallView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 200)];
     
     UIImageView *imView;
-    imView = [[UIImageView alloc] initWithFrame:CGRectMake(0, -60, 320, height/ratio)];
+    imView = [[[UIImageView alloc] initWithFrame:CGRectMake(0, -60, 320, height/ratio)] autorelease];
     imView.transform = CGAffineTransformMakeScale(-1.0, 1.0);
     // add image to view
     imView.image = self.theImage;
@@ -452,10 +454,13 @@
     
     UIImage *newImg = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
+    //[smallView release];
+    
     double endA = CACurrentMediaTime();
-     
+    
     _grabbedImage.image = newImg;
     self.theImage = newImg;
+    //[newImg release];
     
     int iWidth;
     iWidth = self.theImage.size.width;
@@ -474,6 +479,7 @@
     int yDim = 200 / mult;
     int xDim = 320 / mult;
     
+    /*
     for (y = 0; y < yDim; y++)
     {
         for (x = 0; x < xDim; x++)
@@ -492,6 +498,17 @@
             imagedat[x][y] = sum;
         }
     }
+    */
+    for (y = 0; y < yDim; y++)
+    {
+        for (x = 0; x < xDim; x++)
+        {
+            imagedat[x][y] = [self pixelBrightness:data width:iWidth x:x y:y];
+        }
+    }
+    
+    
+    CFRelease(pixelData);
     
     double endImConvert = CACurrentMediaTime();
     
@@ -586,24 +603,22 @@
 
 -(double) pixelBrightness:(const UInt8 *)imageData width:(int)width x:(int)x y:(int)y
 {
-    //NSLog(@"x %d y %d",x,y);
-    
     int scale = 2;
     int pixelinfo = (((width*scale) * (y*scale)) + (x*scale)) * 4;
     
-    UInt8 red = imageData[pixelinfo];
-    UInt8 green = imageData[pixelinfo+1];
-    UInt8 blue = imageData[pixelinfo+2];
+    UInt8 red = imageData[pixelinfo] >> COLOR_BIT_SHIFT;
+    UInt8 green = imageData[pixelinfo+1] >> COLOR_BIT_SHIFT;
+    UInt8 blue = imageData[pixelinfo+2] >> COLOR_BIT_SHIFT;
     
-    //NSLog(@"r %d g %d b %d",red,green,blue);
-    
+    /*
     double dist;
     dist = sqrt((double)red*(double)red + (double)green*(double)green + (double)blue*(double)blue);
     dist  = dist / sqrt(3.0);
+    */
     
-    //NSLog(@"dist is %f",dist);
+    return pixBrightness[red][green][blue];
     
-    return dist;
+    //return dist;
 }
 
 - (void)writeWavHeader:(unsigned char *)header withNumSamples:(long)numSamples
@@ -1111,6 +1126,32 @@
             }
         }
     }
+    
+    int cMult = 256/COLOR_LEVELS;
+    pixBrightness = (double ***)malloc(sizeof(double **) * COLOR_LEVELS);
+    for (int r = 0; r < COLOR_LEVELS; r++)
+    {
+        pixBrightness[r] = (double **)malloc(sizeof(double*) * COLOR_LEVELS);
+        for (int g = 0; g < COLOR_LEVELS; g++)
+        {
+            pixBrightness[r][g] = (double *)malloc(sizeof(double) * COLOR_LEVELS);
+            
+            for (int b = 0; b < COLOR_LEVELS; b++)
+            {
+                double red = (double)r * (double)cMult;
+                double green = (double)g * (double)cMult;
+                double blue = (double)b * (double)cMult;
+                
+                double dist;
+                dist = sqrt((double)red*(double)red + (double)green*(double)green + (double)blue*(double)blue);
+                dist  = dist / sqrt(3.0);
+                pixBrightness[r][g][b] = dist;
+            }
+            
+        }
+    }
+    
+    
     
     _imgIndices = (unsigned char *)malloc(sizeof(unsigned char) * 1010);
     

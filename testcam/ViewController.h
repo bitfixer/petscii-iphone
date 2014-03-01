@@ -31,6 +31,7 @@ UIImagePickerControllerDelegate, AVAudioPlayerDelegate, AVCaptureVideoDataOutput
     
     double *alphalookup1d;
     double **cosalphalookup1d;
+    double ***pixBrightness;
     
     int _dctCoeffCheckLimit;
     //double
