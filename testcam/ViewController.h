@@ -20,6 +20,7 @@ UIImagePickerControllerDelegate, AVAudioPlayerDelegate, AVCaptureVideoDataOutput
     UIImage *_theImage;
     UIImagePickerController *_imgPicker;
     
+    double **dctWeights;
     double **dctInput;
     double *dctOutput;
     double **dctSignatures;

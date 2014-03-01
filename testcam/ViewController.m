@@ -10,6 +10,10 @@
 #import <QuartzCore/QuartzCore.h>
 #import <AVFoundation/AVFoundation.h>
 
+#define GLYPH_DIM       8
+#define GLYPH_DIM_SQ    64
+#define GLYPH_OUT_DIM   8
+
 @implementation ViewController
 {
     AVCaptureVideoPreviewLayer *_previewLayer;
@@ -106,10 +110,55 @@
         
         int index = 0;
         unsigned char bit;
-        for (int y = 0; y < 8; y++)
+        int stride = 8;
+        int mult = stride/GLYPH_DIM;
+        
+        for (int y = 0; y < GLYPH_DIM; y++)
         {
-            for (int x = 0; x < 8; x++)
+            for (int x = 0; x < GLYPH_DIM; x++)
             {
+                int yy = y*mult;
+                int xx = x*mult;
+                
+                double sum = 0.0;
+                for (int ya = yy; ya < yy+mult; ya++)
+                {
+                    for (int xa = xx; xa < xx+mult; xa++)
+                    {
+                        index = ya*stride + xa;
+                        bit = [glyphString characterAtIndex:index];
+                        
+                        if (bit == '0')
+                        {
+                            if (ch < 128)
+                                sum += 0;
+                            else
+                                sum += 255;
+                        }
+                        else
+                        {
+                            if (ch < 128)
+                                sum += 255;
+                            else
+                                sum += 0;
+                        }
+                    }
+                }
+                sum /= (mult*mult);
+                
+                dctInput[x][y] = sum;
+            }
+        }
+        
+        
+        /*
+        for (int y = 0; y < GLYPH_DIM; y++)
+        {
+            for (int x = 0; x < GLYPH_DIM; x++)
+            {
+                double sum = 0.0;
+                for (int )
+                
                 
                 bit = [glyphString characterAtIndex:index];
                 
@@ -131,6 +180,7 @@
                 index++;
             }
         }
+        */
         
         [self dctWithInput:dctInput andOutput:dctSignatures[ch]];
     }
@@ -186,27 +236,62 @@
     
 }
 
+/*
 - (void)dctWithInput:(double **)input andOutput:(double *)output
 {
-    int u,v,i,j;
     double result;
     int outputindex = 0;
-    for(u = 0; u < 8; u++) // 
+    for(int u = 0; u < 8; u++) //
     {
         outputindex = u;
-        for(v = 0; v < 8; v++)
+        for(int v = 0; v < 8; v++)
         {
             result = 0; // reset summed results to 0
-            for(i = 0; i < 8; i++)
+            
+            for(int i = 0; i < 8; i++)
             {
-                for(j = 0; j < 8; j++)
+                for(int j = 0; j < 8; j++)
                 {
                     result = result + (cosalphalookup[u][v][i][j] * input[i][j]);
                 }
             }
-            //output[u+v*8] = result; //store the results
             output[outputindex] = result;
             outputindex += 8;
+        }
+    }
+}
+*/
+
+- (void)dctWithInput:(double **)input andOutput:(double *)output
+{
+    double result;
+    int outputindex = 0;
+    //int limit = GLYPH_DIM;
+    //int limit = 2;
+    
+    for(int u = 0; u < GLYPH_DIM; u++) //
+    {
+        outputindex = u;
+        for(int v = 0; v < GLYPH_DIM; v++)
+        {
+            result = 0; // reset summed results to 0
+            if (dctWeights[u][v] > 0.3)
+            {
+                for(int i = 0; i < GLYPH_DIM; i++)
+                {
+                    for(int j = 0; j < GLYPH_DIM; j++)
+                    {
+                        result = result + (cosalphalookup[u][v][i][j] * input[i][j]);
+                    }
+                }
+                output[outputindex] = result*dctWeights[u][v];
+            }
+            else
+            {
+                output[outputindex] = result;
+            }
+            
+            outputindex += GLYPH_DIM;
         }
     }
 }
@@ -235,14 +320,37 @@
      
     double score, diff;
     score = 0;
-    for (int i = 0; i < 64; i++)
+    
+    /*
+    for (int i = 0; i < GLYPH_DIM_SQ; i++)
     {
         diff = (inputA[i]-inputB[i]);
         diff = diff*diff;
         
         score += diff;
     }
+    */
+     
     
+    //int limit = GLYPH_DIM/2;
+    int limit = GLYPH_DIM;
+    int index = 0;
+    for (int u = 0; u < limit; u++)
+    {
+        index = u;
+        for (int v = 0; v < limit; v++)
+        {
+            if (dctWeights[u][v] > 0.3)
+            {
+                diff = (inputA[index] - inputB[index]);
+                diff = diff*diff;
+                score += diff;
+            }
+            
+            index += GLYPH_DIM;
+        }
+    }
+     
     return score;
 }
 
@@ -329,11 +437,27 @@
     int x,y,xx,yy;
     int matching;
     UIImageView *frag;
-    for (y = 0; y < 200; y++)
+    int mult = (8/GLYPH_DIM);
+    int multsq = mult*mult;
+    int yDim = 200 / mult;
+    int xDim = 320 / mult;
+    
+    for (y = 0; y < yDim; y++)
     {
-        for (x = 0; x < 320; x++)
+        for (x = 0; x < xDim; x++)
         {
-            imagedat[x][y] = [self pixelBrightness:data:iWidth:x:y];
+            double sum = 0;
+            for (yy = 0; yy < mult; yy++)
+            {
+                for (xx = 0; xx < mult; xx++)
+                {
+                    sum += [self pixelBrightness:data width:iWidth x:(x*mult)+xx y:(y*mult)+yy];
+                }
+            }
+            //imagedat[x][y] = [self pixelBrightness:data width:iWidth x:x*mult y:y*mult];
+            
+            sum /= (double)multsq;
+            imagedat[x][y] = sum;
         }
     }
     
@@ -349,16 +473,17 @@
     double copytime = 0;
     double dcttime = 0;
     double matchtime = 0;
+    
     // step through blocks
-    for (y = 0; y < 200; y+= 8)
+    for (y = 0; y < yDim; y+= GLYPH_DIM)
     {
-        for (x = 0; x < 320; x+= 8)
+        for (x = 0; x < xDim; x+= GLYPH_DIM)
         {
             double s = CACurrentMediaTime();
             // copy values into input buffer
-            for (yy = 0; yy < 8; yy ++)
+            for (yy = 0; yy < GLYPH_DIM; yy ++)
             {
-                for (xx = 0; xx < 8; xx++)
+                for (xx = 0; xx < GLYPH_DIM; xx++)
                 {
                     dctInput[xx][yy] = imagedat[x+xx][y+yy];
                 }
@@ -393,6 +518,7 @@
     // now create wav file
     double startTime = CACurrentMediaTime();
     
+    /*
     for (int i = 0; i < 9; i++)
     {
         _imgIndices[i] = 0xff;
@@ -401,6 +527,7 @@
     _imgIndices[9] = 0x00;
     
     [self outputToWav:_imgIndices withLength:1010];
+    */
      
     double endTime = CACurrentMediaTime();
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
@@ -418,12 +545,14 @@
     NSString *documentsDirectory = [paths objectAtIndex:0];
     fullWavPath = [documentsDirectory stringByAppendingString:@"/temp.wav"];
     
+    /*
     AVAudioPlayer* theAudio=[[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:fullWavPath] error:NULL];  
     theAudio.delegate = self;  
     [theAudio play];
+    */
 }
 
--(double) pixelBrightness:(const UInt8 *)imageData: (int)width: (int) x:(int) y
+-(double) pixelBrightness:(const UInt8 *)imageData width:(int)width x:(int)x y:(int)y
 {
     //NSLog(@"x %d y %d",x,y);
     
@@ -831,69 +960,85 @@
     _nextCaptureTime = 0;
 	// Do any additional setup after loading the view, typically from a nib.
     
-    imagedat = (double **)malloc(sizeof(double *) * 320.0);
-    for (int i = 0; i < 320; i++)
+    int xDim = 320 / (8/GLYPH_DIM);
+    int yDim = 200 / (8/GLYPH_DIM);
+    
+    imagedat = (double **)malloc(sizeof(double *) * xDim);
+    for (int i = 0; i < xDim; i++)
     {
-        imagedat[i] = (double *)malloc(sizeof(double) * 200.0);
+        imagedat[i] = (double *)malloc(sizeof(double) * yDim);
     }
     
     dctSignatures = (double **)malloc(sizeof(double *) * 256);
     for (int i = 0; i < 256; i++)
     {
-        dctSignatures[i] = (double *)malloc(sizeof(double) * 64);
+        dctSignatures[i] = (double *)malloc(sizeof(double) * GLYPH_DIM_SQ);
     }
     
-    dctInput = (double **)malloc(sizeof(double *) * 8);
-    for (int i = 0; i < 8; i++)
+    dctInput = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
     {
-        dctInput[i] = (double *)malloc(sizeof(double) * 8);
+        dctInput[i] = (double *)malloc(sizeof(double) * GLYPH_DIM);
     }
     
-    dctOutput = (double *)malloc(sizeof(double) * 64);
+    dctOutput = (double *)malloc(sizeof(double) * GLYPH_DIM_SQ);
     
-    alphalookup = (double **)malloc(sizeof(double *) * 8);
-    for (int i = 0; i < 8; i++)
+    alphalookup = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
     {
-        alphalookup[i] = (double *)malloc(sizeof(double) * 8);
+        alphalookup[i] = (double *)malloc(sizeof(double) * GLYPH_DIM);
     }
     
     // populate alpha lookup table
-    for(int i = 0; i < 8; i++)
+    for(int i = 0; i < GLYPH_DIM; i++)
     {
-        for(int j = 0; j < 8; j++)
+        for(int j = 0; j < GLYPH_DIM; j++)
         {
             alphalookup[i][j] = [self alpha:(double)i] * [self alpha:(double)j];
         }
     }
     
-    cosalphalookup = (double ****)malloc(sizeof(double ***) * 8);
-    for (int i = 0; i < 8; i++)
+    cosalphalookup = (double ****)malloc(sizeof(double ***) * GLYPH_DIM);
+    for (int i = 0; i < GLYPH_DIM; i++)
     {
-        cosalphalookup[i] = (double ***)malloc(sizeof(double **) * 8);
-        for (int j = 0; j < 8; j++)
+        cosalphalookup[i] = (double ***)malloc(sizeof(double **) * GLYPH_DIM);
+        for (int j = 0; j < GLYPH_DIM; j++)
         {
-            cosalphalookup[i][j] = (double **)malloc(sizeof(double *) * 8);
-            for (int k = 0; k < 8; k++)
+            cosalphalookup[i][j] = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+            for (int k = 0; k < GLYPH_DIM; k++)
             {
-                cosalphalookup[i][j][k] = (double *)malloc(sizeof(double) * 8);
+                cosalphalookup[i][j][k] = (double *)malloc(sizeof(double) * GLYPH_DIM);
             }
         }
 
     }
     
-    for(int u = 0; u < 8; u++)
+    for(int u = 0; u < GLYPH_DIM; u++)
     {
-        for(int v = 0; v < 8; v++)
+        for(int v = 0; v < GLYPH_DIM; v++)
         {
-            for(int i = 0; i < 8; i++)
+            for(int i = 0; i < GLYPH_DIM; i++)
             {
-                for(int j = 0; j < 8; j++)
+                for(int j = 0; j < GLYPH_DIM; j++)
                 {
                     cosalphalookup[u][v][i][j] =  alphalookup[i][j]*
-                                                    cos(((M_PI*u)/(2*8))*(2*i + 1))*
-                                                    cos(((M_PI*v)/(2*8))*(2*j + 1));
+                                                    cos(((M_PI*u)/(2*GLYPH_DIM))*(2*i + 1))*
+                                                    cos(((M_PI*v)/(2*GLYPH_DIM))*(2*j + 1));
                 }
             }
+        }
+    }
+    
+    dctWeights = (double **)malloc(sizeof(double *) * GLYPH_DIM);
+    for (int u = 0; u < GLYPH_DIM; u++)
+    {
+        dctWeights[u] = (double *)malloc(sizeof(double) * GLYPH_DIM);
+        
+        for (int v = 0; v < GLYPH_DIM; v++)
+        {
+            double dist = sqrt((double)(u*u + v*v));
+            double weight = sqrt(pow(0.5, dist));
+            dctWeights[u][v] = weight;
         }
     }
     
@@ -909,11 +1054,11 @@
     
     _fragmentImageViews = [[NSMutableArray alloc] init];
     
-    for (int y = 0; y < 200; y+= 8)
+    for (int y = 0; y < 200; y+= GLYPH_OUT_DIM)
     {
-        for (int x = 0; x < 320; x+= 8)
+        for (int x = 0; x < 320; x+= GLYPH_OUT_DIM)
         {
-            UIImageView *frag = [[[UIImageView alloc] initWithFrame:CGRectMake(x, y, 8, 8)] autorelease];
+            UIImageView *frag = [[[UIImageView alloc] initWithFrame:CGRectMake(x, y, GLYPH_OUT_DIM, GLYPH_OUT_DIM)] autorelease];
             [_fragmentImageViews addObject:frag];
             [_resultView addSubview:frag];
         }
@@ -1058,7 +1203,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (_shouldCaptureNow)
     {
         double currTime = CACurrentMediaTime();
-        if (currTime > _nextCaptureTime)
+        // if (currTime > _nextCaptureTime)
         {
             _nextCaptureTime = currTime + 1.0;
             //_shouldCaptureNow = NO;
@@ -1093,6 +1238,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     
     UIImage *vimg = [UIImage imageWithCGImage:cimg scale:1 orientation:orient];
     CGImageRelease(cimg);
+    [_ciContext release];
     
     return vimg;
 }
