@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import <QuartzCore/QuartzCore.h>
 #import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
 
 #define GLYPH_DIM       8
 #define GLYPH_DIM_SQ    64
@@ -33,6 +34,7 @@
     NSMutableArray *_glyphImages;
     BOOL _shouldCaptureNow;
     double _nextCaptureTime;
+    unsigned char _pageChar;
 }
 
 @synthesize imgPicker = _imgPicker;
@@ -555,7 +557,7 @@
             frag.image = [_glyphImages objectAtIndex:matching];
             
             // add image index
-            _imgIndices[currImgIndex+10] = matching;
+            _imgIndices[currImgIndex] = matching;
             currImgIndex++;
         }
     }
@@ -568,16 +570,27 @@
     double startTime = CACurrentMediaTime();
     
     /*
-    for (int i = 0; i < 9; i++)
+    int index = 0;
+    for (unsigned char row = 0; row < 25; row++)
     {
-        _imgIndices[i] = 0xff;
+        for (unsigned char col = 0; col < 40; col++)
+        {
+            _imgIndices[index++] = 'A'+col;
+        }
+    }
+    */
+    
+    for (int index = 0; index < 1000; index++)
+    {
+        _imgIndices[index] = _pageChar;
     }
     
-    _imgIndices[9] = 0x00;
+    _pageChar++;
+    if (_pageChar > 'Z')
+    {
+        _pageChar = 'A';
+    }
     
-    [self outputToWav:_imgIndices withLength:1010];
-    */
-     
     double endTime = CACurrentMediaTime();
     NSLog(@"took %f seconds to convert image",endImConvert-startImConvert);
     NSLog(@"took %f seconds to do total dct",endDct-startDct);
@@ -588,17 +601,20 @@
     NSLog(@"took %f seconds to build wav",endTime-startTime);
     //NSLog(@"mindc %f maxdc %f",minDc,maxDc);
     
-    // play the wav file
-    NSString *fullWavPath;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    fullWavPath = [documentsDirectory stringByAppendingString:@"/temp.wav"];
+    //NSData *imgData = [NSData dataWithBytes:_imgIndices length:1000];
     
-    /*
-    AVAudioPlayer* theAudio=[[AVAudioPlayer alloc] initWithContentsOfURL:[NSURL fileURLWithPath:fullWavPath] error:NULL];  
-    theAudio.delegate = self;  
-    [theAudio play];
-    */
+    //NSData *imgData = [NSData dataWithBytes:_imgIndices length:50];
+    unsigned char *ptr = _imgIndices;
+    AppDelegate *delegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    for (int i = 0; i < 1000; i+=10)
+    {
+        NSData *imgData = [NSData dataWithBytesNoCopy:ptr length:10 freeWhenDone:NO];
+        [delegate writeValueToPeripheral:imgData];
+        ptr += 10;
+    }
+    
+    
+    
 }
 
 -(double) pixelBrightness:(const UInt8 *)imageData width:(int)width x:(int)x y:(int)y
@@ -1005,6 +1021,7 @@
 {
     [super viewDidLoad];
     _nextCaptureTime = 0;
+    _pageChar = 'A';
 	// Do any additional setup after loading the view, typically from a nib.
     
     int xDim = 320 / (8/GLYPH_DIM);
@@ -1311,12 +1328,13 @@
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection
 {
-    if (_shouldCaptureNow)
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    if (_shouldCaptureNow && !appDelegate.sendingData)
     {
         double currTime = CACurrentMediaTime();
-        // if (currTime > _nextCaptureTime)
+        if (currTime > _nextCaptureTime)
         {
-            _nextCaptureTime = currTime + 1.0;
+            _nextCaptureTime = currTime + 2.0;
             //_shouldCaptureNow = NO;
             CVImageBufferRef imgBuf = CMSampleBufferGetImageBuffer(sampleBuffer);
             NSLog(@"capturing now!");

@@ -21,6 +21,9 @@
 		65BDEE861549DFA9000C8B18 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65BDEE851549DFA9000C8B18 /* AVFoundation.framework */; };
 		65BDEE891549E04D000C8B18 /* sine.wav in Resources */ = {isa = PBXBuildFile; fileRef = 65BDEE881549E04D000C8B18 /* sine.wav */; };
 		65BDEE8B1549E107000C8B18 /* testsin.wav in Resources */ = {isa = PBXBuildFile; fileRef = 65BDEE8A1549E107000C8B18 /* testsin.wav */; };
+		65CAC4C918CD7D3100BF49E3 /* PairDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 65CAC4C818CD7D3100BF49E3 /* PairDeviceViewController.m */; };
+		65CAC4CB18CD7EFB00BF49E3 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65CAC4CA18CD7EFB00BF49E3 /* CoreBluetooth.framework */; };
+		65CAC4CD18CD9B1700BF49E3 /* test in Resources */ = {isa = PBXBuildFile; fileRef = 65CAC4CC18CD9B1700BF49E3 /* test */; };
 		65D4BC491549157C0070ED55 /* 0_r.png in Resources */ = {isa = PBXBuildFile; fileRef = 65D4B9481549157B0070ED55 /* 0_r.png */; };
 		65D4BC4A1549157C0070ED55 /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 65D4B9491549157B0070ED55 /* 0.png */; };
 		65D4BC4B1549157C0070ED55 /* 0.txt in Resources */ = {isa = PBXBuildFile; fileRef = 65D4B94A1549157B0070ED55 /* 0.txt */; };
@@ -814,6 +817,10 @@
 		65BDEE851549DFA9000C8B18 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		65BDEE881549E04D000C8B18 /* sine.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = sine.wav; path = Resources/sine.wav; sourceTree = "<group>"; };
 		65BDEE8A1549E107000C8B18 /* testsin.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = testsin.wav; path = Resources/testsin.wav; sourceTree = "<group>"; };
+		65CAC4C718CD7D3100BF49E3 /* PairDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairDeviceViewController.h; sourceTree = "<group>"; };
+		65CAC4C818CD7D3100BF49E3 /* PairDeviceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PairDeviceViewController.m; sourceTree = "<group>"; };
+		65CAC4CA18CD7EFB00BF49E3 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		65CAC4CC18CD9B1700BF49E3 /* test */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = test; path = ../../../Desktop/test; sourceTree = "<group>"; };
 		65D4B9481549157B0070ED55 /* 0_r.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = 0_r.png; path = Resources/0_r.png; sourceTree = "<group>"; };
 		65D4B9491549157B0070ED55 /* 0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = 0.png; path = Resources/0.png; sourceTree = "<group>"; };
 		65D4B94A1549157B0070ED55 /* 0.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = 0.txt; path = Resources/0.txt; sourceTree = "<group>"; };
@@ -1591,6 +1598,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65CAC4CB18CD7EFB00BF49E3 /* CoreBluetooth.framework in Frameworks */,
 				652374A616B79F2600FBA577 /* CoreMedia.framework in Frameworks */,
 				652374A416B79EFE00FBA577 /* CoreImage.framework in Frameworks */,
 				652374A116B79C2C00FBA577 /* CoreVideo.framework in Frameworks */,
@@ -1630,6 +1638,7 @@
 		6585C17F1548A61B001910E0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				65CAC4CA18CD7EFB00BF49E3 /* CoreBluetooth.framework */,
 				6585C1801548A61B001910E0 /* UIKit.framework */,
 				6585C1821548A61B001910E0 /* Foundation.framework */,
 				6585C1841548A61B001910E0 /* CoreGraphics.framework */,
@@ -1645,9 +1654,12 @@
 				6585C1901548A61B001910E0 /* AppDelegate.m */,
 				6585C1921548A61B001910E0 /* ViewController.h */,
 				6585C1931548A61B001910E0 /* ViewController.m */,
+				65CAC4CC18CD9B1700BF49E3 /* test */,
 				6585C1871548A61B001910E0 /* Supporting Files */,
 				651FB79316AE0193009F9E44 /* PSGrabController.h */,
 				651FB79416AE0193009F9E44 /* PSGrabController.m */,
+				65CAC4C718CD7D3100BF49E3 /* PairDeviceViewController.h */,
+				65CAC4C818CD7D3100BF49E3 /* PairDeviceViewController.m */,
 			);
 			path = testcam;
 			sourceTree = "<group>";
@@ -2999,6 +3011,7 @@
 				65D4BE411549157C0070ED55 /* 168_r.png in Resources */,
 				65D4BE421549157C0070ED55 /* 168.png in Resources */,
 				65D4BE431549157C0070ED55 /* 168.txt in Resources */,
+				65CAC4CD18CD9B1700BF49E3 /* test in Resources */,
 				65D4BE441549157C0070ED55 /* 169_r.png in Resources */,
 				65D4BE451549157C0070ED55 /* 169.png in Resources */,
 				65D4BE461549157C0070ED55 /* 169.txt in Resources */,
@@ -3274,6 +3287,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6585C18D1548A61B001910E0 /* main.m in Sources */,
+				65CAC4C918CD7D3100BF49E3 /* PairDeviceViewController.m in Sources */,
 				6585C1911548A61B001910E0 /* AppDelegate.m in Sources */,
 				6585C1941548A61B001910E0 /* ViewController.m in Sources */,
 				651FB79516AE0193009F9E44 /* PSGrabController.m in Sources */,

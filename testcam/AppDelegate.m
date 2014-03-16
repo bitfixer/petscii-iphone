@@ -9,17 +9,27 @@
 #import "AppDelegate.h"
 
 #import "ViewController.h"
+#import "PairDeviceViewController.h"
 //#import "PSGrabController.h"
 
 @implementation AppDelegate
+{
+    CBCharacteristic *_writeCharacteristic;
+    NSData *_sendData;
+}
 
 @synthesize window = _window;
 @synthesize viewController = _viewController;
+@synthesize bluetoothCentralManager = _bluetoothCentralManager;
+@synthesize peripheral = _peripheral;
 
 - (void)dealloc
 {
     [_window release];
     [_viewController release];
+    [_bluetoothCentralManager release]; _bluetoothCentralManager = nil;
+    [_peripheral release]; _peripheral = nil;
+    [_sendData release]; _sendData = nil;
     [super dealloc];
 }
 
@@ -29,12 +39,19 @@
     // Override point for customization after application launch.
     //self.viewController = (ViewController *)[[UIImagePickerController alloc] init];
     
-    self.viewController = [[[ViewController alloc] init] autorelease];
+    //self.viewController = [[[ViewController alloc] init] autorelease];
     //self.viewController = [[[PSGrabController alloc] init] autorelease];
     
+    self.viewController = [[[PairDeviceViewController alloc] init] autorelease];
     
     self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];
+    
+    [_bluetoothCentralManager release];
+    _bluetoothCentralManager = [[CBCentralManager alloc] initWithDelegate:self
+                                                                    queue:nil
+                                                                  options:nil];
+    
     return YES;
 }
 
@@ -75,6 +92,103 @@
      Save data if appropriate.
      See also applicationDidEnterBackground:.
      */
+}
+
+- (void) beginCapture
+{
+    // get the write characteristic
+    self.peripheral.delegate = self;
+    [self.peripheral discoverServices:nil];
+    
+    //self.viewController = [[[ViewController alloc] init] autorelease];
+    //self.window.rootViewController = self.viewController;
+}
+
+#pragma mark
+#pragma CBPeripheralDelegate methods
+
+- (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
+{
+    for (CBService *service in peripheral.services)
+    {
+        [peripheral discoverCharacteristics:nil forService:service];
+    }
+}
+
+- (void)                    peripheral:(CBPeripheral *)peripheral
+  didDiscoverCharacteristicsForService:(CBService *)service
+                                 error:(NSError *)error
+{
+    for (CBCharacteristic *characteristic in service.characteristics)
+    {
+        //if (characteristic.properties == CBCharacteristicPropertyWrite)
+        if (characteristic.properties == CBCharacteristicPropertyWriteWithoutResponse)
+        {
+            NSLog(@"WRITE");
+            if (!_writeCharacteristic)
+            {
+                [_writeCharacteristic release];
+                _writeCharacteristic = [characteristic retain];
+                
+                self.viewController = [[[ViewController alloc] init] autorelease];
+                self.window.rootViewController = self.viewController;
+            }
+        }
+    }
+}
+
+- (void) writeValueToPeripheral:(NSData *)data
+{
+    //[_sendData release]; _sendData = nil;
+    //_sendData = [data retain];
+    
+    [self.peripheral writeValue:data
+              forCharacteristic:_writeCharacteristic
+                           type:CBCharacteristicWriteWithoutResponse];
+    //[_sendData release]; _sendData = nil;
+    //self.sendingData = YES;
+}
+
+- (void)                peripheral:(CBPeripheral *)peripheral
+    didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
+                             error:(NSError *)error
+{
+    if (error)
+    {
+        NSLog(@"error writing: %@", [error localizedDescription]);
+    }
+    else
+    {
+        NSLog(@"successful write");
+    }
+    
+    [_sendData release]; _sendData = nil;
+    self.sendingData = NO;
+}
+
+#pragma mark
+#pragma CBCentralManagerDelegate methods
+
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central
+{
+    NSLog(@"central manager updated state");
+}
+
+- (void)centralManager:(CBCentralManager *)central
+ didDiscoverPeripheral:(CBPeripheral *)peripheral
+     advertisementData:(NSDictionary *)advertisementData
+                  RSSI:(NSNumber *)RSSI
+{
+    NSLog(@"Discovered peripheral!");
+}
+
+- (void)centralManager:(CBCentralManager *)central
+didDisconnectPeripheral:(CBPeripheral *)peripheral
+                 error:(NSError *)error
+{
+    NSLog(@"lost connection with peripheral");
+    self.peripheral = nil;
+    //[_nav popToRootViewControllerAnimated:YES];
 }
 
 @end

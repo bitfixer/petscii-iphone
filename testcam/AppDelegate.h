@@ -7,13 +7,20 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <CoreBluetooth/CoreBluetooth.h>
 
 @class ViewController;
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate,CBCentralManagerDelegate,CBPeripheralDelegate>
 
-@property (strong, nonatomic) UIWindow *window;
+- (void) beginCapture;
+- (void) writeValueToPeripheral:(NSData *)data;
 
-@property (strong, nonatomic) UIViewController *viewController;
+@property (retain, nonatomic) UIWindow *window;
+@property (nonatomic, retain) CBCentralManager *bluetoothCentralManager;
+@property (nonatomic, retain) CBPeripheral *peripheral;
+@property (retain, nonatomic) UIViewController *viewController;
+
+@property (nonatomic, assign) BOOL sendingData;
 
 @end
